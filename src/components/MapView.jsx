@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Map, { Source, Layer } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -16,33 +16,16 @@ export default function MapView({
   data,
   mode,
   mapRef,
-  selectedId,     // ✅ LAD22CD
-  onSelectedId,   // ✅ expects LAD22CD
-  hoveredId,      // ✅ LAD22CD
-  onHoveredId,    // ✅ expects LAD22CD
-  spotlightId,    // ✅ LAD22CD
+  selectedId,
+  onSelectedId,
+  hoveredId,
+  onHoveredId,
+  spotlightId,
 }) {
-  const wrapperRef = useRef(null);
   const [hoverPopup, setHoverPopup] = useState(null);
   const [labelLayerId, setLabelLayerId] = useState(null);
 
-  useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-
-    const ro = new ResizeObserver(() => {
-      const map = mapRef.current?.getMap?.();
-      if (map) map.resize();
-    });
-
-    ro.observe(el);
-
-    const map = mapRef.current?.getMap?.();
-    if (map) map.resize();
-
-    return () => ro.disconnect();
-  }, [mapRef]);
-
+  // 色阶表达：与 legend 分段一致
   const fillColorExpr = useMemo(() => {
     const missingColor = "#f3f4f6";
 
@@ -65,30 +48,26 @@ export default function MapView({
     }
 
     return [
-      "case",
-      ["!", ["has", "burdenRatio"]],
+      "step",
+      ["coalesce", ["get", "burdenRatio"], -1],
       missingColor,
-      [
-        "interpolate",
-        ["linear"],
-        ["to-number", ["get", "burdenRatio"]],
-        0.7,
-        "#2563eb",
-        1.0,
-        "#f3f4f6",
-        1.3,
-        "#dc2626",
-      ],
+      0,
+      "#3182ce",
+      0.8,
+      "#93c5fd",
+      0.95,
+      "#cbd5e0",
+      1.05,
+      "#fca5a5",
+      1.2,
+      "#e53e3e",
     ];
   }, [mode]);
 
   const onMapLoad = (e) => {
     const layers = e.target.getStyle().layers;
-    const labelLayer = layers?.find((l) => l.type === "symbol" && l.layout?.["text-field"]);
+    const labelLayer = layers.find((l) => l.type === "symbol" && l.layout?.["text-field"]);
     if (labelLayer) setLabelLayerId(labelLayer.id);
-
-    const map = mapRef.current?.getMap?.();
-    if (map) map.resize();
   };
 
   const tooltip = useMemo(() => {
@@ -97,22 +76,33 @@ export default function MapView({
     const name = p.LAD22NM || "Borough";
 
     if (mode === "raw") {
-      return { title: name, lines: [`NO₂: ${formatNum(p.NO2, 1)} µg/m³`] };
+      const no2 = p.NO2;
+      return {
+        title: name,
+        lines: [`NO₂: ${formatNum(no2, 1)} µg/m³`],
+      };
     }
+
+    // ✅ weighted: 颜色依据是 burdenRatio，但同时显示 share，避免“7% 为什么红”的误解
+    const ratio = p.burdenRatio;
+    const burdenShare = p.burdenShare; // 0~1
+    const popShare = p.populationShare ?? p.popShare; // 0~1
 
     return {
       title: name,
       lines: [
-        `Burden ratio (color): ${formatNum(p.burdenRatio, 2)}×`,
-        `Burden share: ${formatPct01(p.burdenShare, 1)}`,
-        `Population share: ${formatPct01(p.populationShare ?? p.popShare, 2)}`,
+        `Burden ratio (color): ${formatNum(ratio, 2)}×`,
+        `Burden share: ${formatPct01(burdenShare, 1)}`,
+        `Population share: ${formatPct01(popShare, 2)}`,
         `1.00 = proportional (share ÷ share)`,
       ],
     };
   }, [hoverPopup, mode]);
 
+  const showMeaningCard = mode !== "raw";
+
   return (
-    <div ref={wrapperRef} style={{ position: "absolute", inset: 0 }}>
+    <div style={{ position: "absolute", inset: 0 }}>
       <Map
         ref={mapRef}
         initialViewState={{ longitude: -0.12, latitude: 51.5, zoom: 9.5 }}
@@ -122,9 +112,10 @@ export default function MapView({
         onMouseMove={(e) => {
           const f = e.features?.[0];
           if (f) {
-            const code = f.properties?.LAD22CD; // ✅ 统一
-            if (code) onHoveredId(code);
+            onHoveredId(f.id);
             setHoverPopup({
+              lng: e.lngLat.lng,
+              lat: e.lngLat.lat,
               x: e.point?.x,
               y: e.point?.y,
               props: f.properties,
@@ -138,11 +129,7 @@ export default function MapView({
           onHoveredId(null);
           setHoverPopup(null);
         }}
-        onClick={(e) => {
-          const f = e.features?.[0];
-          const code = f?.properties?.LAD22CD; // ✅ 统一
-          onSelectedId(code || null);
-        }}
+        onClick={(e) => onSelectedId(e.features?.[0]?.id || null)}
       >
         {data && (
           <Source id="boroughs" type="geojson" data={data} promoteId="LAD22CD">
@@ -153,12 +140,17 @@ export default function MapView({
               paint={{ "fill-color": fillColorExpr, "fill-opacity": 0.85 }}
             />
 
+            {/* ✅ Spotlight（模式切换后的“后果”更强） */}
             <Layer
               id="borough-spotlight-outline"
               type="line"
               beforeId={labelLayerId}
               filter={["==", ["get", "LAD22CD"], spotlightId || ""]}
-              paint={{ "line-color": "#111827", "line-width": 2.5, "line-opacity": 0.85 }}
+              paint={{
+                "line-color": "#111827",
+                "line-width": 2.5,
+                "line-opacity": 0.85,
+              }}
             />
 
             <Layer
@@ -179,6 +171,38 @@ export default function MapView({
         )}
       </Map>
 
+      {/* ✅ 小型“意义卡片”：补全 legend 解释（不替代 App 的 LegendCard） */}
+      {showMeaningCard && (
+        <div
+          style={{
+            position: "absolute",
+            right: 16,
+            bottom: 16,
+            zIndex: 1200,
+            width: 320,
+            background: "rgba(255,255,255,0.92)",
+            border: "1px solid #e2e8f0",
+            borderRadius: 16,
+            padding: "10px 12px",
+            boxShadow: "0 10px 24px rgba(0,0,0,0.10)",
+            backdropFilter: "blur(8px)",
+            pointerEvents: "none",
+          }}
+        >
+          <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b" }}>
+            Color meaning
+          </div>
+          <div style={{ marginTop: 6, fontSize: 12.5, color: "#334155", lineHeight: 1.35 }}>
+            Map color encodes <strong>burden ratio</strong> ={" "}
+            <strong>burden share</strong> ÷ <strong>population share</strong>.
+            <div style={{ marginTop: 6, color: "#475569" }}>
+              A borough can be red even if its burden share is small, if its population share is even smaller.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Hover tooltip */}
       {tooltip && hoverPopup?.x != null && hoverPopup?.y != null && (
         <div
           style={{

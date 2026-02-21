@@ -18,39 +18,40 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
     if (!data?.features?.length) return [];
 
     if (mode === "weighted") {
+      // ✅ weighted：排序依据 totalExposure（NO₂ × population）
+      // 显示 Exposure Index（Avg = 100%） + burdenShare（share %）避免误解
       return [...data.features]
         .sort((a, b) => num(b.properties?.totalExposure) - num(a.properties?.totalExposure))
         .map((f) => {
-          const idx = num(f.properties?.exposureIndex);
-          const bShare = f.properties?.burdenShare;
+          const idx = num(f.properties?.exposureIndex); // Avg=100
+          const bShare = f.properties?.burdenShare; // 0~1
           const shareText = fmtPct01(bShare, 1);
 
           return {
-            id: f.properties?.LAD22CD, // ✅ FIX: 用 LAD22CD
+            id: f.id,
             name: f.properties?.LAD22NM || "Borough",
             displayPrimary: `${idx.toFixed(0)}%`,
             displaySecondary: shareText ? `${shareText} share` : null,
-            barWidthPct: `${Math.min(idx / 2, 100)}%`,
+            barWidthPct: `${Math.min(idx / 2, 100)}%`, // 200% -> 100%宽；100% -> 50%宽
             isHigh: idx >= 120,
           };
-        })
-        .filter((d) => !!d.id);
+        });
     }
 
+    // raw：按 NO2 排
     return [...data.features]
       .sort((a, b) => num(b.properties?.NO2) - num(a.properties?.NO2))
       .map((f) => {
         const v = num(f.properties?.NO2);
         return {
-          id: f.properties?.LAD22CD, // ✅ FIX: 用 LAD22CD
+          id: f.id,
           name: f.properties?.LAD22NM || "Borough",
           displayPrimary: `${v.toFixed(1)} µg/m³`,
           displaySecondary: null,
           barWidthPct: `${Math.min(v * 2, 100)}%`,
           isHigh: v >= 30,
         };
-      })
-      .filter((d) => !!d.id);
+      });
   }, [data, mode]);
 
   useEffect(() => {
