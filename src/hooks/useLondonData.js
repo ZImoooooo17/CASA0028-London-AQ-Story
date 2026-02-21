@@ -62,12 +62,12 @@ export default function useLondonData() {
           const NO2 = num(no2Map.get(code), 0);
           const Population = num(popMap.get(code), 0);
 
-          // ✅ 方案 B：Population Burden = total exposure
-          const totalExposure = NO2 * Population; // 原始量：用于排序/排名
+          // ✅ Population Burden = total exposure
+          const totalExposure = NO2 * Population; // 用于排序/排名
 
           return {
             ...f,
-            id: code, // 你的 App/Map/Chart 都用 f.id
+            id: code, // App/Map/Chart 都用 f.id
             properties: {
               ...f.properties,
               LAD22CD: code,
@@ -85,12 +85,12 @@ export default function useLondonData() {
         // exposure index 平均值：Avg = 100%
         const avgTotalExposure = features.length > 0 ? totalExp / features.length : 0;
 
-        // 3) shares + ratio（用于不平等解释，不用于重排）
+        // 3) shares + ratio（用于不平等解释）
         features.forEach((f) => {
           const p = f.properties;
 
-          p.popShare = totalPop > 0 ? p.Population / totalPop : 0; // 0~1
-          p.burdenShare = totalExp > 0 ? p.totalExposure / totalExp : 0; // 0~1
+          p.popShare = totalPop > 0 ? p.Population / totalPop : 0;
+          p.burdenShare = totalExp > 0 ? p.totalExposure / totalExp : 0;
 
           // ✅ 不平等解释：burdenShare / popShare
           p.burdenRatio = p.popShare > 0 ? p.burdenShare / p.popShare : 0;
@@ -107,15 +107,35 @@ export default function useLondonData() {
           f.properties.rawRank = idx + 1;
         });
 
-        // ✅ 5) Weighted (Burden) Rank：按 totalExposure（高->低）——会产生 re-ranking
+        // 5) Weighted Rank：按 totalExposure（高->低）
         const sortedByWeighted = [...features].sort((a, b) => num(b.properties.totalExposure) - num(a.properties.totalExposure));
-
         sortedByWeighted.forEach((f, idx) => {
           f.properties.weightedRank = idx + 1;
 
-          // 你 DetailPanel 里 tooltip 写的是：rankJump = rawRank − weightedRank
+          // rankJump = rawRank − weightedRank
           f.properties.rankJump = num(f.properties.rawRank) - num(f.properties.weightedRank);
         });
+
+        // 6) Spotlight candidates for mode-switch dramaturgy
+        // positive rankJump -> moves up (more concerning) when population exposure is considered
+        let maxAbsJumpId = null;
+        let maxAbs = -Infinity;
+        let maxUpJumpId = null;
+        let maxUpJumpValue = -Infinity;
+
+        for (const f of features) {
+          const j = num(f.properties.rankJump, 0);
+          const absj = Math.abs(j);
+
+          if (absj > maxAbs) {
+            maxAbs = absj;
+            maxAbsJumpId = f.id;
+          }
+          if (j > maxUpJumpValue) {
+            maxUpJumpValue = j;
+            maxUpJumpId = f.id;
+          }
+        }
 
         setData({
           type: "FeatureCollection",
@@ -124,6 +144,9 @@ export default function useLondonData() {
             totalPop,
             totalExp,
             avgTotalExposure,
+            maxAbsJumpId,
+            maxUpJumpId,
+            maxUpJumpValue,
           },
         });
       } catch (err) {

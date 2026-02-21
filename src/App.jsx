@@ -19,196 +19,146 @@ function IntroModal({ onStart, onSelectCase }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backdropFilter: "blur(12px)",
+        padding: 18,
       }}
     >
       <div
         style={{
-          maxWidth: 600,
-          background: "white",
-          padding: 40,
-          borderRadius: 28,
-          textAlign: "center",
-          animation: "modalFadeIn 0.6s ease-out",
+          width: "min(920px, 100%)",
+          borderRadius: 18,
+          background: "rgba(255,255,255,0.96)",
+          border: "1px solid rgba(226,232,240,0.9)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+          overflow: "hidden",
         }}
       >
-        <h1 style={{ margin: "0 0 10px 0", fontSize: 32, fontWeight: 950, letterSpacing: -1 }}>
-          The Average is <span style={{ color: "#e53e3e" }}>Not Neutral</span>
-        </h1>
-
-        <div style={{ display: "flex", gap: 10, justifyContent: "center", margin: "20px 0" }}>
-          <div style={{ padding: 10, background: "#f1f5f9", borderRadius: 12, flex: 1 }}>
-            <div
-              style={{
-                height: 40,
-                background: "linear-gradient(90deg, #bfdbfe, #1e3a8a)",
-                borderRadius: 4,
-                marginBottom: 8,
-              }}
-            />
-            <div style={{ fontSize: 10, fontWeight: "bold" }}>THE STATISTICAL AVERAGE</div>
+        <div style={{ padding: 18, borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 34, height: 34, background: "#0f172a", borderRadius: 10 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 950, fontSize: 16, letterSpacing: "-0.4px", color: "#0f172a" }}>
+              Average Air, Uneven Burdens
+            </div>
+            <div style={{ fontSize: 12.5, color: "#475569", marginTop: 2 }}>
+              A mode switch can reorder the city.
+            </div>
           </div>
-
-          <div style={{ fontSize: 24, alignSelf: "center" }}>→</div>
-
-          <div style={{ padding: 10, background: "#fef2f2", borderRadius: 12, flex: 1 }}>
-            <div
-              style={{
-                height: 40,
-                background: "linear-gradient(90deg, #3182ce, #cbd5e0, #e53e3e)",
-                borderRadius: 4,
-                marginBottom: 8,
-              }}
-            />
-            <div style={{ fontSize: 10, fontWeight: "bold", color: "#e53e3e" }}>THE LIVED BURDEN</div>
-          </div>
-        </div>
-
-        <p style={{ color: "#4a5568", fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>
-          Standard maps treat pollution as a spatial average. But averages flatten where people actually
-          breathe. Switch modes to see how counting people reorders London’s hierarchy of concern.
-        </p>
-
-        <div style={{ marginBottom: 35 }}>
-          <div
+          <button
+            onClick={onStart}
             style={{
-              fontSize: 11,
-              color: "#94a3b8",
-              marginBottom: 12,
-              fontWeight: 800,
-              textTransform: "uppercase",
+              border: "1px solid #e2e8f0",
+              background: "white",
+              padding: "10px 12px",
+              borderRadius: 12,
+              cursor: "pointer",
+              fontWeight: 900,
+              fontSize: 12,
+              color: "#0f172a",
             }}
           >
-            Explore High-Impact Shifts:
-          </div>
-
-          <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-            {[
-              { id: "E09000005", name: "Brent: The Silent Jump", color: "#e53e3e" },
-              { id: "E09000019", name: "Islington: Dense Burden", color: "#e53e3e" },
-              { id: "E09000030", name: "Waltham Forest: Re-Ranked", color: "#e53e3e" },
-            ].map((c) => (
-              <button
-                key={c.id}
-                onClick={() => onSelectCase(c.id)}
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: 30,
-                  border: `2px solid ${c.color}`,
-                  background: "white",
-                  color: c.color,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  fontWeight: 800,
-                  transition: "all 0.2s",
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = "scale(1.05)";
-                  e.currentTarget.style.background = c.color;
-                  e.currentTarget.style.color = "white";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = "scale(1)";
-                  e.currentTarget.style.background = "white";
-                  e.currentTarget.style.color = c.color;
-                }}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
+            Start Exploring →
+          </button>
         </div>
 
-        <button
-          onClick={onStart}
-          style={{
-            background: "#1a202c",
-            color: "white",
-            border: "none",
-            padding: "16px 48px",
-            borderRadius: 14,
-            fontSize: 16,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          Free Exploration
-        </button>
-      </div>
+        <div style={{ padding: 18, display: "grid", gap: 14 }}>
+          <div style={{ fontSize: 13.2, color: "#334155", lineHeight: 1.6 }}>
+            This interface compares two lenses on London’s NO₂:
+            <ul style={{ margin: "10px 0 0 18px" }}>
+              <li>
+                <strong>The Statistical Average</strong>: borough mean concentration.
+              </li>
+              <li>
+                <strong>The Lived Burden</strong>: population-weighted exposure (and its inequality signals).
+              </li>
+            </ul>
+            <div style={{ marginTop: 8 }}>
+              Switch modes to see how rankings change when people are counted.
+            </div>
+          </div>
 
-      <style>{`
-        @keyframes modalFadeIn {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              onClick={() => onSelectCase("E09000005")}
+              style={{
+                border: "1px solid #e2e8f0",
+                background: "#0f172a",
+                color: "white",
+                padding: "10px 12px",
+                borderRadius: 12,
+                cursor: "pointer",
+                fontWeight: 900,
+                fontSize: 12,
+              }}
+            >
+              Jump case: Brent →
+            </button>
+
+            <button
+              onClick={onStart}
+              style={{
+                border: "1px solid #e2e8f0",
+                background: "white",
+                padding: "10px 12px",
+                borderRadius: 12,
+                cursor: "pointer",
+                fontWeight: 900,
+                fontSize: 12,
+                color: "#0f172a",
+              }}
+            >
+              Explore freely
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 /**
- * ✅ Header 下方 Narrative Intro（已存在 + 小幅增强：可折叠 Why）
+ * Narrative Intro (你原有的，保留)
  */
 function NarrativeIntro({ mode, onReplayIntro }) {
-  const isRaw = mode === "raw";
   const [openWhy, setOpenWhy] = useState(false);
 
   return (
-    <section
-      style={{
-        background: "rgba(255,255,255,0.92)",
-        borderBottom: "1px solid #e2e8f0",
-        padding: "14px 30px",
-      }}
-    >
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 14, justifyContent: "space-between" }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, letterSpacing: "-0.4px", color: "#0f172a" }}>
-                Average Air, Uneven Burdens
-              </h2>
+    <section style={{ background: "#fff", borderBottom: "1px solid #e2e8f0" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "14px 30px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 950, color: "#0f172a", letterSpacing: "-0.2px" }}>
+              {mode === "raw" ? "Lens 1 — The Statistical Average" : "Lens 2 — The Lived Burden"}
+            </div>
 
-              <span
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 999,
-                  fontSize: 12,
-                  fontWeight: 800,
-                  border: "1px solid",
-                  borderColor: isRaw ? "rgba(37,99,235,0.25)" : "rgba(229,62,62,0.25)",
-                  background: isRaw ? "rgba(37,99,235,0.08)" : "rgba(229,62,62,0.08)",
-                  color: isRaw ? "#2563eb" : "#e53e3e",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Current view: {isRaw ? "The Statistical Average" : "The Lived Burden"}
-              </span>
+            <p style={{ margin: "6px 0 0", color: "#475569", fontSize: 13.2, lineHeight: 1.55 }}>
+              {mode === "raw" ? (
+                <>
+                  Borough mean NO₂ concentration is useful — but it can hide how many people live with exposure.
+                </>
+              ) : (
+                <>
+                  Population weighting can reorder rankings —
+                  revealing where “average” air hides disproportionate exposure.
+                </>
+              )}
+            </p>
 
+            <div style={{ marginTop: 8 }}>
               <button
                 onClick={() => setOpenWhy((v) => !v)}
                 style={{
                   border: "1px solid #e2e8f0",
                   background: "white",
-                  padding: "6px 10px",
-                  borderRadius: 999,
+                  padding: "8px 10px",
+                  borderRadius: 12,
                   cursor: "pointer",
-                  fontWeight: 800,
+                  fontWeight: 900,
                   fontSize: 12,
                   color: "#0f172a",
                 }}
-                title="Why does this matter?"
               >
-                {openWhy ? "Hide why" : "Why?"}
+                {openWhy ? "Hide why" : "Why do rankings change?"}
               </button>
             </div>
-
-            <p style={{ margin: "8px 0 0", color: "#475569", lineHeight: 1.55, fontSize: 13.5 }}>
-              London’s air looks different depending on how it is represented. Switching between{" "}
-              <strong>the statistical average</strong> (borough mean NO₂) and <strong>the lived burden</strong> (a
-              population-weighted burden ratio) shows how a change in metric can reorder borough rankings —
-              revealing where “average” air hides disproportionate exposure.
-            </p>
 
             {openWhy && (
               <div
@@ -286,7 +236,7 @@ function NarrativeIntro({ mode, onReplayIntro }) {
 }
 
 /**
- * ✅ 可折叠 Legend（解释升级版）
+ * ✅ 可折叠 Legend（你原有的，保留）
  */
 function LegendCard({ mode }) {
   const isRaw = mode === "raw";
@@ -431,6 +381,7 @@ export default function App() {
   const [showIntro, setShowIntro] = useState(true);
 
   const [showReorderToast, setShowReorderToast] = useState(false);
+  const [spotlightId, setSpotlightId] = useState(null);
 
   const { data, error } = useLondonData();
   const mapRef = useRef(null);
@@ -482,19 +433,24 @@ export default function App() {
   };
 
   const triggerReorderDramaturgy = (nextMode) => {
+    // toast dramaturgy
     setShowReorderToast(true);
-    window.setTimeout(() => setShowReorderToast(false), 1200);
+    window.setTimeout(() => setShowReorderToast(false), 1600);
 
-    if (nextMode === "weighted" && data?.features?.length) {
-      const best = data.features.reduce((prev, cur) => {
-        const a = Math.abs(prev?.properties?.rankJump ?? 0);
-        const b = Math.abs(cur?.properties?.rankJump ?? 0);
-        return b > a ? cur : prev;
-      }, data.features[0]);
+    if (!data?.features?.length) return;
 
-      if (best?.id) {
-        setTimeout(() => handleSelect(best.id), 450);
+    if (nextMode === "weighted") {
+      // Prefer “moves up” (more concerning) rather than absolute change
+      const focusId = data?.meta?.maxUpJumpId || data?.meta?.maxAbsJumpId;
+
+      if (focusId) {
+        setSpotlightId(focusId);
+        // also select + fly to it to make the “reordering” feel concrete
+        setTimeout(() => handleSelect(focusId), 450);
       }
+    } else {
+      // leaving burden mode: clear spotlight
+      setSpotlightId(null);
     }
   };
 
@@ -536,12 +492,13 @@ export default function App() {
           <div style={{ width: 32, height: 32, background: "#1a202c", borderRadius: 8 }} />
           <div>
             <h1 style={{ fontSize: 19, fontWeight: 950, letterSpacing: "-0.6px", margin: 0 }}>
-              The Average is Not Neutral
+              Average Air, Uneven Burdens
             </h1>
 
             <div style={{ fontSize: 12, color: "#64748b", marginTop: 2, lineHeight: 1.25 }}>
-              City-wide means can flatten lived exposure.
-              <span style={{ display: "block" }}>Switch the lens to see how the ranking changes when people are counted.</span>
+              London’s air pollution appears average — until we change how we measure it.
+              <span style={{ display: "block" }}>Switching modes changes how London is ranked.</span>
+              <span style={{ display: "block" }}>Averages may obscure lived exposure.</span>
             </div>
           </div>
         </div>
@@ -586,7 +543,7 @@ export default function App() {
             backdropFilter: "blur(10px)",
           }}
         >
-          The city has been reordered.
+          Look what just happened.
         </div>
       )}
 
@@ -596,7 +553,13 @@ export default function App() {
           {isLoading ? (
             <div style={{ padding: 18, color: "#64748b" }}>Loading charts…</div>
           ) : (
-            <BarRankChart data={data} mode={mode} selectedId={selectedId} onSelect={handleSelect} onHover={setHoveredId} />
+            <BarRankChart
+              data={data}
+              mode={mode}
+              selectedId={selectedId}
+              onSelect={handleSelect}
+              onHover={setHoveredId}
+            />
           )}
         </aside>
 
@@ -613,6 +576,7 @@ export default function App() {
                 onSelectedId={handleSelect}
                 hoveredId={hoveredId}
                 onHoveredId={setHoveredId}
+                spotlightId={spotlightId}
               />
               <LegendCard mode={mode} />
             </>
@@ -629,12 +593,16 @@ export default function App() {
               overflowY: "auto",
             }}
           >
-            <DetailPanel selectedFeature={data.features.find((f) => f.id === selectedId)} mode={mode} onClose={() => setSelectedId(null)} />
+            <DetailPanel
+              selectedFeature={data.features.find((f) => f.id === selectedId)}
+              mode={mode}
+              onClose={() => setSelectedId(null)}
+            />
           </aside>
         )}
       </div>
 
-      {/* Footer reflection */}
+      {/* Footer reflection（你原有的，保留） */}
       <footer
         style={{
           padding: "20px 30px",

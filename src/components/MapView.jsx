@@ -15,6 +15,7 @@ export default function MapView({
   onSelectedId,
   hoveredId,
   onHoveredId,
+  spotlightId,
 }) {
   const [hoverPopup, setHoverPopup] = useState(null);
   const [labelLayerId, setLabelLayerId] = useState(null);
@@ -60,9 +61,7 @@ export default function MapView({
 
   const onMapLoad = (e) => {
     const layers = e.target.getStyle().layers;
-    const labelLayer = layers.find(
-      (l) => l.type === "symbol" && l.layout?.["text-field"]
-    );
+    const labelLayer = layers.find((l) => l.type === "symbol" && l.layout?.["text-field"]);
     if (labelLayer) setLabelLayerId(labelLayer.id);
   };
 
@@ -82,10 +81,7 @@ export default function MapView({
     const ratio = p.burdenRatio;
     return {
       title: name,
-      lines: [
-        `Burden ratio: ${formatNum(ratio, 2)}`,
-        `1.00 = proportional burden`,
-      ],
+      lines: [`Burden ratio: ${formatNum(ratio, 2)}`, `1.00 = proportional burden`],
     };
   }, [hoverPopup, mode]);
 
@@ -127,6 +123,20 @@ export default function MapView({
               beforeId={labelLayerId}
               paint={{ "fill-color": fillColorExpr, "fill-opacity": 0.85 }}
             />
+
+            {/* ✅ Spotlight（模式切换后的“后果”更强） */}
+            <Layer
+              id="borough-spotlight-outline"
+              type="line"
+              beforeId={labelLayerId}
+              filter={["==", ["get", "LAD22CD"], spotlightId || ""]}
+              paint={{
+                "line-color": "#111827",
+                "line-width": 2.5,
+                "line-opacity": 0.85,
+              }}
+            />
+
             <Layer
               id="borough-hover-outline"
               type="line"
@@ -134,6 +144,7 @@ export default function MapView({
               filter={["==", ["get", "LAD22CD"], hoveredId || ""]}
               paint={{ "line-color": "#f59e0b", "line-width": 3 }}
             />
+
             <Layer
               id="borough-select-outline"
               type="line"
@@ -144,7 +155,7 @@ export default function MapView({
         )}
       </Map>
 
-      {/* ✅ Hover tooltip（关键：之前你算了 hoverPopup 但没渲染） */}
+      {/* ✅ Hover tooltip */}
       {tooltip && hoverPopup?.x != null && hoverPopup?.y != null && (
         <div
           style={{
@@ -161,9 +172,7 @@ export default function MapView({
             maxWidth: 240,
           }}
         >
-          <div style={{ fontWeight: 900, marginBottom: 6, color: "#111827" }}>
-            {tooltip.title}
-          </div>
+          <div style={{ fontWeight: 900, marginBottom: 6, color: "#111827" }}>{tooltip.title}</div>
           <div style={{ fontSize: 12.5, color: "#334155", lineHeight: 1.35 }}>
             {tooltip.lines.map((t, i) => (
               <div key={i}>{t}</div>
