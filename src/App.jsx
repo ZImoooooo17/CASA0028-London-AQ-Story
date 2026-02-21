@@ -148,17 +148,112 @@ function IntroModal({ onStart, onSelectCase }) {
 }
 
 /**
- * ✅ 可折叠 Legend（分段与 MapView.jsx 的 step 完全一致）
- * Raw:
- *   <24, 24–28, 28–32, 32–36, >36
- * Weighted (burdenRatio):
- *   <0.8, 0.8–0.95, 0.95–1.05, 1.05–1.2, >1.2
+ * ✅ Header 下方 Narrative Intro
+ */
+function NarrativeIntro({ mode, onReplayIntro }) {
+  const isRaw = mode === "raw";
+
+  return (
+    <section
+      style={{
+        background: "rgba(255,255,255,0.92)",
+        borderBottom: "1px solid #e2e8f0",
+        padding: "14px 30px",
+      }}
+    >
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 14, justifyContent: "space-between" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, letterSpacing: "-0.4px", color: "#0f172a" }}>
+                Average Air, Uneven Burdens
+              </h2>
+
+              <span
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  fontSize: 12,
+                  fontWeight: 800,
+                  border: "1px solid",
+                  borderColor: isRaw ? "rgba(37,99,235,0.25)" : "rgba(229,62,62,0.25)",
+                  background: isRaw ? "rgba(37,99,235,0.08)" : "rgba(229,62,62,0.08)",
+                  color: isRaw ? "#2563eb" : "#e53e3e",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Current view: {isRaw ? "Raw Concentration" : "Population Burden"}
+              </span>
+            </div>
+
+            <p style={{ margin: "8px 0 0", color: "#475569", lineHeight: 1.55, fontSize: 13.5 }}>
+              London’s air quality looks different depending on how it is measured. Switching between{" "}
+              <strong>Raw NO₂</strong> and a <strong>population-weighted burden ratio</strong> shows how statistical
+              framing can reorder borough rankings — revealing where “average” air hides disproportionate exposure.
+            </p>
+
+            <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <div
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  background: "#f8fafc",
+                  fontSize: 12.5,
+                  color: "#334155",
+                }}
+              >
+                <strong>Try:</strong> switch to{" "}
+                <span style={{ color: "#e53e3e", fontWeight: 800 }}>Population Burden</span>, then click a borough to
+                compare <strong>rank change</strong> and <strong>burden ratio</strong>.
+              </div>
+
+              <div
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  background: "#f8fafc",
+                  fontSize: 12.5,
+                  color: "#334155",
+                }}
+              >
+                <strong>Tip:</strong> hover the bar chart to locate the borough on the map.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ flexShrink: 0 }}>
+            <button
+              onClick={onReplayIntro}
+              style={{
+                border: "1px solid #e2e8f0",
+                background: "white",
+                padding: "10px 12px",
+                borderRadius: 12,
+                cursor: "pointer",
+                fontWeight: 800,
+                fontSize: 12,
+                color: "#0f172a",
+              }}
+              title="Replay intro"
+            >
+              Replay Intro
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * ✅ 可折叠 Legend（解释升级版）
  */
 function LegendCard({ mode }) {
   const isRaw = mode === "raw";
   const [open, setOpen] = useState(true);
 
-  // 与 MapView.jsx raw step 一致（缺失色不在 legend 显示）
   const rawBands = [
     { label: "< 24", color: "#eff6ff" },
     { label: "24 – 28", color: "#bfdbfe" },
@@ -167,11 +262,10 @@ function LegendCard({ mode }) {
     { label: "> 36", color: "#1e3a8a" },
   ];
 
-  // 与 MapView.jsx weighted step 一致
   const burdenBands = [
-    { label: "< 0.8", color: "#3182ce" },   // 0 ~ 0.8 之前
+    { label: "< 0.8", color: "#3182ce" },
     { label: "0.8 – 0.95", color: "#93c5fd" },
-    { label: "0.95 – 1.05", color: "#cbd5e0" }, // city average band
+    { label: "0.95 – 1.05", color: "#cbd5e0" },
     { label: "1.05 – 1.2", color: "#fca5a5" },
     { label: "> 1.2", color: "#e53e3e" },
   ];
@@ -197,7 +291,6 @@ function LegendCard({ mode }) {
         pointerEvents: "auto",
       }}
     >
-      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <div
           style={{
@@ -238,7 +331,6 @@ function LegendCard({ mode }) {
 
       {open && (
         <>
-          {/* Color bands */}
           <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
             {bands.map((it) => (
               <div
@@ -266,19 +358,26 @@ function LegendCard({ mode }) {
             ))}
           </div>
 
-          {/* Explanation */}
-          <div style={{ marginTop: 12, fontSize: 12.5, color: "#475569", lineHeight: 1.45 }}>
+          {/* ✅ Explanation upgraded */}
+          <div style={{ marginTop: 12, fontSize: 12.5, color: "#475569", lineHeight: 1.5 }}>
             {isRaw ? (
               <>
-                Higher values indicate worse air quality on average.
+                <strong>Raw NO₂</strong> shows borough-level average concentration (µg/m³).
+                <div style={{ marginTop: 6, opacity: 0.9 }}>Higher values = worse average air.</div>
                 <div style={{ marginTop: 6, opacity: 0.9 }}>
-                  Tip: switch to <strong>Population Burden</strong> to reveal disproportionate exposure.
+                  Tip: switch to <strong>Population Burden</strong> to see where population density amplifies risk.
                 </div>
               </>
             ) : (
               <>
-                <strong>1</strong> means proportional burden (pollution share matches population share). Values
-                <strong> &gt; 1</strong> indicate disproportionate exposure pressure.
+                <strong>Population Burden (ratio)</strong> compares a borough’s share of total exposure with its share
+                of London’s population.
+                <div style={{ marginTop: 6, opacity: 0.9 }}>
+                  <strong>1.0</strong> = proportional (burden share matches population share)
+                </div>
+                <div style={{ marginTop: 6, opacity: 0.9 }}>
+                  <strong>&gt; 1.0</strong> = disproportionate exposure pressure • <strong>&lt; 1.0</strong> = lower-than-expected burden
+                </div>
               </>
             )}
           </div>
@@ -293,6 +392,9 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
   const [showIntro, setShowIntro] = useState(true);
+
+  // ✅ dramaturgy: toast
+  const [showReorderToast, setShowReorderToast] = useState(false);
 
   const { data, error } = useLondonData();
   const mapRef = useRef(null);
@@ -343,6 +445,24 @@ export default function App() {
     setTimeout(() => handleSelect(id), 600);
   };
 
+  // ✅ Mode 切换 dramaturgy：toast + 自动聚焦最大 rankJump
+  const triggerReorderDramaturgy = (nextMode) => {
+    setShowReorderToast(true);
+    window.setTimeout(() => setShowReorderToast(false), 1200);
+
+    if (nextMode === "weighted" && data?.features?.length) {
+      const best = data.features.reduce((prev, cur) => {
+        const a = Math.abs(prev?.properties?.rankJump ?? 0);
+        const b = Math.abs(cur?.properties?.rankJump ?? 0);
+        return b > a ? cur : prev;
+      }, data.features[0]);
+
+      if (best?.id) {
+        setTimeout(() => handleSelect(best.id), 450);
+      }
+    }
+  };
+
   if (error) {
     return (
       <div style={{ padding: 24, fontFamily: "system-ui" }}>
@@ -386,7 +506,10 @@ export default function App() {
 
         <div style={{ background: "#f1f5f9", padding: 4, borderRadius: 10, display: "flex" }}>
           <button
-            onClick={() => setMode("raw")}
+            onClick={() => {
+              setMode("raw");
+              triggerReorderDramaturgy("raw");
+            }}
             style={{
               padding: "8px 20px",
               border: "none",
@@ -400,7 +523,10 @@ export default function App() {
             Raw NO₂
           </button>
           <button
-            onClick={() => setMode("weighted")}
+            onClick={() => {
+              setMode("weighted");
+              triggerReorderDramaturgy("weighted");
+            }}
             style={{
               padding: "8px 20px",
               border: "none",
@@ -415,6 +541,32 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {/* ✅ Narrative Intro */}
+      <NarrativeIntro mode={mode} onReplayIntro={() => setShowIntro(true)} />
+
+      {/* ✅ Toast dramaturgy */}
+      {showReorderToast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 78,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "rgba(15,23,42,0.92)",
+            color: "white",
+            padding: "10px 14px",
+            borderRadius: 14,
+            fontSize: 13,
+            fontWeight: 800,
+            zIndex: 9999,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          The city has been reordered.
+        </div>
+      )}
 
       {/* Main */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
