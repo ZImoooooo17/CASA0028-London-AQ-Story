@@ -253,20 +253,20 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
       accentSoft: "rgba(229,62,62,0.10)",
       accentBorder: "rgba(229,62,62,0.22)",
       arrow: "↑",
-      verb: "jumps up",
-      story: `Re-ranked upward: ${name} becomes more concerning when population exposure is considered.`,
+      verb: "rises",
+      story: `Visibility Penalty: when population is counted, ${name} rises ${absJ} places in the hierarchy of concern.`,
       meaning:
-        "Population weighting increases prominence — averages may understate pressure where more people are exposed.",
+        "This shift suggests the conventional average can underrepresent lived exposure where many people are affected.",
     },
     down: {
       accent: "#2563eb",
       accentSoft: "rgba(37,99,235,0.10)",
       accentBorder: "rgba(37,99,235,0.22)",
       arrow: "↓",
-      verb: "drops",
-      story: `Re-ranked downward: ${name} looks less severe once exposure is weighted by population.`,
+      verb: "falls",
+      story: `Spatial Buffer: ${name} falls ${absJ} places once population exposure is considered.`,
       meaning:
-        "Population weighting reduces prominence — high concentration may affect fewer residents overall.",
+        "Here, raw concentration can look severe even when fewer residents are exposed relative to other boroughs.",
     },
     same: {
       accent: "rgba(15,23,42,0.60)",
@@ -274,8 +274,8 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
       accentBorder: "rgba(15,23,42,0.12)",
       arrow: "→",
       verb: "stays",
-      story: `Stable rank: ${name} tells a consistent story in both metrics.`,
-      meaning: "This borough’s position is relatively stable across metrics.",
+      story: `Alignment: ${name} tells a consistent story in both metrics.`,
+      meaning: "The statistical average and the lived burden agree closely for this borough.",
     },
     unknown: {
       accent: "rgba(15,23,42,0.60)",
@@ -520,16 +520,16 @@ function ShareComparisonCard({ burdenShare, popShare, burdenRatio, isBurden, ran
   const driver = getShiftDriver(r, absJ);
 
   const modeHint = !isBurden
-    ? "Tip: switch to Population Burden to compare exposure share vs population share (and interpret inequity using the ratio)."
+    ? "Tip: switch to The Lived Burden to compare exposure share vs population share (and interpret inequity using the ratio)."
     : driver.label === "Density-driven shift"
-    ? "You’re viewing Population Burden: shares are close, so rank shifts are often density/absolute-exposure driven."
+    ? "You’re viewing The Lived Burden: shares are close, so rank shifts are often density/absolute-exposure driven."
     : driver.label === "Compounded risk"
-    ? "You’re viewing Population Burden: re-ranking and disproportionate burden reinforce each other here."
+    ? "You’re viewing The Lived Burden: re-ranking and disproportionate burden reinforce each other here."
     : driver.tone === "red"
-    ? "You’re viewing Population Burden: the ratio supports an inequality reading (burden share exceeds population share)."
+    ? "You’re viewing The Lived Burden: the ratio supports an inequality reading (burden share exceeds population share)."
     : driver.tone === "blue"
-    ? "You’re viewing Population Burden: burden share is lower than population share, softening the inequality reading."
-    : "You’re viewing Population Burden: shares + ratio help explain what the average view can hide.";
+    ? "You’re viewing The Lived Burden: burden share is lower than population share, softening the inequality reading."
+    : "You’re viewing The Lived Burden: shares + ratio help explain what the average view can hide.";
 
   return (
     <Card style={{ padding: 18 }}>
@@ -630,22 +630,22 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
 
   const narrative = !isBurden
     ? {
-        title: "Raw view",
+        title: "The Statistical Average",
         body:
           rawRank == null
-            ? "This view shows borough average concentration. Switch to Population Burden to see how the city is reordered."
-            : `This borough ranks #${rawRank} by average concentration. Switch to Population Burden to reveal how weighting exposure can reorder the city.`,
+            ? "This view shows borough mean NO₂. Switch to The Lived Burden to see how the city is reordered when people are counted."
+            : `This borough ranks #${rawRank} by average concentration. Switch to The Lived Burden to reveal how counting people can reorder the city.`,
         pillTone: "blue",
-        pillText: "Raw NO₂",
+        pillText: "The Statistical Average",
       }
     : {
-        title: "Population burden view",
+        title: "The Lived Burden",
         body:
           rawRank == null || weightedRank == null
             ? "This view re-ranks boroughs using population exposure."
             : `This borough shifts from #${rawRank} (raw) to #${weightedRank} (burden) — a choice that changes what becomes visible.`,
         pillTone: "red",
-        pillText: "Population Burden",
+        pillText: "The Lived Burden",
       };
 
   return (

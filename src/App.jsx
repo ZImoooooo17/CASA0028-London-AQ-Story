@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import MapView from "./components/MapView";
 import BarRankChart from "./components/BarRankChart";
 import DetailPanel from "./components/DetailPanel";
+import ModeToggle from "./components/ModeToggle";
 import useLondonData from "./hooks/useLondonData";
 
 /**
@@ -31,8 +32,8 @@ function IntroModal({ onStart, onSelectCase }) {
           animation: "modalFadeIn 0.6s ease-out",
         }}
       >
-        <h1 style={{ margin: "0 0 10px 0", fontSize: 32, fontWeight: 900, letterSpacing: -1 }}>
-          London's Hidden <span style={{ color: "#e53e3e" }}>Inequity</span>
+        <h1 style={{ margin: "0 0 10px 0", fontSize: 32, fontWeight: 950, letterSpacing: -1 }}>
+          The Average is <span style={{ color: "#e53e3e" }}>Not Neutral</span>
         </h1>
 
         <div style={{ display: "flex", gap: 10, justifyContent: "center", margin: "20px 0" }}>
@@ -45,7 +46,7 @@ function IntroModal({ onStart, onSelectCase }) {
                 marginBottom: 8,
               }}
             />
-            <div style={{ fontSize: 10, fontWeight: "bold" }}>RAW CONCENTRATION</div>
+            <div style={{ fontSize: 10, fontWeight: "bold" }}>THE STATISTICAL AVERAGE</div>
           </div>
 
           <div style={{ fontSize: 24, alignSelf: "center" }}>→</div>
@@ -59,13 +60,13 @@ function IntroModal({ onStart, onSelectCase }) {
                 marginBottom: 8,
               }}
             />
-            <div style={{ fontSize: 10, fontWeight: "bold", color: "#e53e3e" }}>SYSTEMIC BURDEN</div>
+            <div style={{ fontSize: 10, fontWeight: "bold", color: "#e53e3e" }}>THE LIVED BURDEN</div>
           </div>
         </div>
 
         <p style={{ color: "#4a5568", fontSize: 16, lineHeight: 1.6, marginBottom: 30 }}>
-          Concentration levels only tell half the story. By re-ranking London, we expose where population
-          density turns “average” air into a disproportionate health burden.
+          Standard maps treat pollution as a spatial average. But averages flatten where people actually
+          breathe. Switch modes to see how counting people reorders London’s hierarchy of concern.
         </p>
 
         <div style={{ marginBottom: 35 }}>
@@ -181,7 +182,7 @@ function NarrativeIntro({ mode, onReplayIntro }) {
                   whiteSpace: "nowrap",
                 }}
               >
-                Current view: {isRaw ? "Raw Concentration" : "Population Burden"}
+                Current view: {isRaw ? "The Statistical Average" : "The Lived Burden"}
               </span>
 
               <button
@@ -203,9 +204,10 @@ function NarrativeIntro({ mode, onReplayIntro }) {
             </div>
 
             <p style={{ margin: "8px 0 0", color: "#475569", lineHeight: 1.55, fontSize: 13.5 }}>
-              London’s air quality looks different depending on how it is measured. Switching between{" "}
-              <strong>Raw NO₂</strong> and a <strong>population-weighted burden ratio</strong> shows how statistical
-              framing can reorder borough rankings — revealing where “average” air hides disproportionate exposure.
+              London’s air looks different depending on how it is represented. Switching between{" "}
+              <strong>the statistical average</strong> (borough mean NO₂) and <strong>the lived burden</strong> (a
+              population-weighted burden ratio) shows how a change in metric can reorder borough rankings —
+              revealing where “average” air hides disproportionate exposure.
             </p>
 
             {openWhy && (
@@ -221,7 +223,7 @@ function NarrativeIntro({ mode, onReplayIntro }) {
                   lineHeight: 1.55,
                 }}
               >
-                <strong>Raw</strong> is an average concentration. <strong>Population Burden</strong> compares a
+                <strong>The Statistical Average</strong> is an average concentration. <strong>The Lived Burden</strong> compares a
                 borough’s <em>share of total exposure</em> with its <em>share of population</em>. That’s why the map
                 can “reorder” — the same pollution level can imply very different impacts depending on how many
                 people are exposed.
@@ -240,7 +242,7 @@ function NarrativeIntro({ mode, onReplayIntro }) {
                 }}
               >
                 <strong>Try:</strong> switch to{" "}
-                <span style={{ color: "#e53e3e", fontWeight: 800 }}>Population Burden</span>, then click a borough to
+                <span style={{ color: "#e53e3e", fontWeight: 800 }}>The Lived Burden</span>, then click a borough to
                 compare <strong>rank change</strong> and <strong>burden ratio</strong>.
               </div>
 
@@ -340,7 +342,7 @@ function LegendCard({ mode }) {
 
         {open && (
           <div style={{ fontWeight: 900, letterSpacing: "-0.2px", flex: 1 }}>
-            {isRaw ? "Raw NO₂ concentration (µg/m³)" : "Population burden (ratio)"}
+            {isRaw ? "Borough-average NO₂ (µg/m³)" : "Population burden (ratio)"}
           </div>
         )}
 
@@ -397,16 +399,16 @@ function LegendCard({ mode }) {
           <div style={{ marginTop: 12, fontSize: 12.5, color: "#475569", lineHeight: 1.5 }}>
             {isRaw ? (
               <>
-                <strong>Raw NO₂</strong> shows borough-level average concentration (µg/m³).
+                <strong>The Statistical Average</strong> shows borough-level average concentration (µg/m³).
                 <div style={{ marginTop: 6, opacity: 0.9 }}>Higher values = worse average air.</div>
                 <div style={{ marginTop: 6, opacity: 0.9 }}>
-                  Tip: switch to <strong>Population Burden</strong> to see where population density amplifies risk.
+                  Tip: switch to <strong>The Lived Burden</strong> to see where population exposure amplifies risk.
                 </div>
               </>
             ) : (
               <>
-                <strong>Population Burden (ratio)</strong> compares a borough’s share of total exposure with its share
-                of London’s population.
+                <strong>The Lived Burden (ratio)</strong> compares a borough’s share of total exposure with its share of
+                London’s population.
                 <div style={{ marginTop: 6, opacity: 0.9 }}>
                   <strong>1.0</strong> = proportional (burden share matches population share)
                 </div>
@@ -509,8 +511,8 @@ export default function App() {
 
   const headerExplain =
     mode === "raw"
-      ? "Raw shows borough-average NO₂. Averages can hide how many people live with exposure."
-      : "Population Burden ranks by burden ratio (vs 100% average). Rankings can shift—revealing disproportionate exposure.";
+      ? "The Statistical Average shows borough mean NO₂. Averages can hide how many people live with exposure."
+      : "The Lived Burden uses a population-weighted burden ratio (exposure share vs population share). Rankings can shift—revealing disproportionate exposure.";
 
   return (
     <div style={{ display: "flex", height: "100vh", flexDirection: "column", background: "#f8f9fa" }}>
@@ -533,53 +535,25 @@ export default function App() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 32, height: 32, background: "#1a202c", borderRadius: 8 }} />
           <div>
-            <h1 style={{ fontSize: 19, fontWeight: 900, letterSpacing: "-0.5px", margin: 0 }}>
-              London Air <span style={{ color: "#2563eb" }}>Impact</span>
+            <h1 style={{ fontSize: 19, fontWeight: 950, letterSpacing: "-0.6px", margin: 0 }}>
+              The Average is Not Neutral
             </h1>
 
-            {/* ✅ 2–3 行 narrative（更直接） */}
             <div style={{ fontSize: 12, color: "#64748b", marginTop: 2, lineHeight: 1.25 }}>
-              Average air is not equally shared.
-              <span style={{ display: "block" }}>Switch metrics to see how representation reshapes inequality.</span>
+              City-wide means can flatten lived exposure.
+              <span style={{ display: "block" }}>Switch the lens to see how the ranking changes when people are counted.</span>
             </div>
           </div>
         </div>
 
-        <div style={{ background: "#f1f5f9", padding: 4, borderRadius: 10, display: "flex" }}>
-          <button
-            onClick={() => {
-              setMode("raw");
-              triggerReorderDramaturgy("raw");
+        <div style={{ background: "#0f172a", padding: 4, borderRadius: 12 }}>
+          <ModeToggle
+            mode={mode}
+            onMode={(next) => {
+              setMode(next);
+              triggerReorderDramaturgy(next);
             }}
-            style={{
-              padding: "8px 20px",
-              border: "none",
-              borderRadius: 8,
-              cursor: "pointer",
-              background: mode === "raw" ? "#fff" : "transparent",
-              fontWeight: 700,
-              color: mode === "raw" ? "#2563eb" : "#64748b",
-            }}
-          >
-            Raw NO₂
-          </button>
-          <button
-            onClick={() => {
-              setMode("weighted");
-              triggerReorderDramaturgy("weighted");
-            }}
-            style={{
-              padding: "8px 20px",
-              border: "none",
-              borderRadius: 8,
-              cursor: "pointer",
-              background: mode === "weighted" ? "#fff" : "transparent",
-              fontWeight: 700,
-              color: mode === "weighted" ? "#e53e3e" : "#64748b",
-            }}
-          >
-            Population Burden
-          </button>
+          />
         </div>
       </header>
 
