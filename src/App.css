@@ -1,56 +1,389 @@
-/* App.css - global baseline only (this project uses mostly inline styles) */
-
 :root {
-  --max-width: 1200px;
-  --bg: #f8f9fa;
-  --text: #0f172a;
-  --muted: #64748b;
+  --bg: #ffffff;
+  --fg: #111827;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --card: rgba(255, 255, 255, 0.92);
 }
 
-html,
-body {
-  height: 100%;
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  color: var(--fg);
   background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
-    "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji",
+    "Segoe UI Emoji";
 }
 
-/* Keep links clean */
-a {
-  color: inherit;
+.app {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 16px 28px;
 }
 
-/* Better focus visibility for keyboard navigation */
-button:focus-visible,
-a:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.35);
-  outline-offset: 2px;
-  border-radius: 10px;
+.header h1 {
+  margin: 0 0 10px;
+  font-size: 2.1rem;
+  letter-spacing: -0.02em;
 }
 
-/* Slightly nicer scrollbars (optional, safe) */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 116, 139, 0.35) transparent;
+.lede {
+  margin: 8px 0 10px;
+  color: var(--fg);
+  line-height: 1.45;
 }
 
-*::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+.reflection {
+  margin-top: 12px;
+  padding: 12px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fafafa;
 }
 
-*::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.35);
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+.reflection h2 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
 }
 
-*::-webkit-scrollbar-track {
+.reflection p {
+  margin: 6px 0;
+  color: var(--fg);
+  line-height: 1.45;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.mode-toggle button {
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  font-size: 0.95rem;
+}
+
+.mode-toggle button:hover {
+  transform: translateY(-1px);
+  border-color: #9ca3af;
+}
+
+.mode-toggle button.active {
+  border-color: #111827;
+  font-weight: 650;
+  background: #f9fafb;
+}
+
+.try-block {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: white;
+}
+
+.try-block__title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.try-block__body {
+  color: var(--fg);
+  line-height: 1.45;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: 1.55fr 0.75fr;
+  gap: 14px;
+  margin-top: 14px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+}
+
+.map-wrap {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f9fafb;
+  min-height: 520px;
+}
+
+.status {
+  padding: 12px;
+  color: var(--muted);
+}
+
+.status--error {
+  color: #b91c1c;
+}
+
+.map {
+  position: relative;
+  height: 520px;
+}
+
+.legend {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 10;
+  padding: 10px 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  max-width: 260px;
+}
+
+.legend__title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.legend__text {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+/* 右上角 Rank Changes */
+.rank-changes {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+  min-width: 230px;
+  backdrop-filter: blur(6px);
+}
+
+.rank-changes__title {
+  font-weight: 750;
+  margin-bottom: 6px;
+}
+
+.rank-changes__row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 8px;
+  border-radius: 12px;
+  border: none;
   background: transparent;
+  cursor: pointer;
+  text-align: left;
 }
+
+.rank-changes__row:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.rank-changes__arrow {
+  font-weight: 800;
+}
+
+.rank-changes__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-changes__jump {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 右侧面板 */
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  background: white;
+}
+
+.panel--empty {
+  color: var(--muted);
+}
+
+.panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.panel__kicker {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.panel__title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.panel__close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: white;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.panel__close:hover {
+  border-color: #9ca3af;
+}
+
+.panel__hint {
+  line-height: 1.45;
+}
+
+.panel__section {
+  margin-top: 12px;
+}
+
+.panel__sectionTitle {
+  font-weight: 750;
+  margin-bottom: 6px;
+}
+
+.panel__small {
+  color: var(--fg);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.pill {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #f9fafb;
+  font-size: 0.9rem;
+}
+
+.panel__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.metric {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+  background: #fafafa;
+}
+
+.metric--wide {
+  grid-column: 1 / -1;
+}
+
+.metric__label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.metric__value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric__note {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.interface-note {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.4;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.footer {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.footer-note {
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* --- Biggest Rank Changes (map overlay) --- */
+.rankChangesCard{
+  position:absolute;
+  top:14px;
+  right:14px;
+  z-index:1200;
+  width:260px;
+  background: rgba(255,255,255,0.92);
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  padding:10px 10px;
+  box-shadow:0 10px 24px rgba(0,0,0,0.10);
+  backdrop-filter: blur(8px);
+}
+.rankChangesCard__title{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:#64748b;
+  margin-bottom:8px;
+}
+.rankChangesCard__row{
+  width:100%;
+  display:grid;
+  grid-template-columns:18px 1fr auto;
+  gap:8px;
+  align-items:center;
+  padding:8px 10px;
+  border-radius:12px;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  text-align:left;
+}
+.rankChangesCard__row:hover{ background: rgba(15,23,42,0.05); }
+.rankChangesCard__arrow{ font-weight:900; color:#0f172a; }
+.rankChangesCard__name{
+  font-weight:800; color:#0f172a;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.rankChangesCard__jump{ font-weight:900; color:#475569; font-variant-numeric: tabular-nums; }

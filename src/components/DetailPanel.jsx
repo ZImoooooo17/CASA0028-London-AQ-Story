@@ -377,7 +377,7 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
             ) : (
               <>
                 <strong style={{ color: "rgba(15,23,42,0.78)" }}>Tip:</strong> switch to{" "}
-                <strong>The Lived Burden</strong> to reveal re-ranking.
+                <strong>Burden View</strong> to reveal re-ranking.
               </>
             )}
           </div>
@@ -543,22 +543,22 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
 
   const narrative = !isBurden
     ? {
-        title: "The Statistical Average",
+        title: "Average View",
         body:
           rawRank == null
-            ? "This view shows borough mean NO₂. Switch to The Lived Burden to see how the city is reordered when people are counted."
-            : `This borough ranks #${rawRank} by average concentration. Switch to The Lived Burden to reveal how counting people can reorder the city.`,
+            ? "This view shows borough mean NO₂. Switch to Burden View to see how the city is reordered when people are counted."
+            : `This borough ranks #${rawRank} by average concentration. Switch to Burden View to reveal how counting people can reorder the city.`,
         pillTone: "blue",
-        pillText: "The Statistical Average",
+        pillText: "Average View",
       }
     : {
-        title: "The Lived Burden",
+        title: "Burden View",
         body:
           rawRank == null || weightedRank == null
             ? "This view re-ranks boroughs using population exposure."
             : `This borough shifts from #${rawRank} (raw) to #${weightedRank} (burden) — a choice that changes what becomes visible.`,
         pillTone: "red",
-        pillText: "The Lived Burden",
+        pillText: "Burden View",
       };
 
   const showJumpMoment = isBurden && rankJump != null && Math.abs(rankJump) >= 5;
@@ -671,7 +671,7 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
 
       {/* ✅ Ethical hint（短句即可，不写 essay） */}
       <div style={{ fontSize: 12.2, color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
-        Averages may obscure lived exposure.
+        This interface does not declare what is fair. It shows how measurement choices quietly redraw who is seen and who is overlooked.
       </div>
 
       <div style={{ height: 6 }} />

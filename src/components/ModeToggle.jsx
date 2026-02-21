@@ -9,8 +9,9 @@ export default function ModeToggle({ mode, onMode }) {
           ...(mode === "raw" ? { color: "#1e40af" } : null),
         }}
       >
-        The Statistical Average
+        Average View
       </button>
+
       <button
         onClick={() => onMode("weighted")}
         style={{
@@ -19,7 +20,7 @@ export default function ModeToggle({ mode, onMode }) {
           ...(mode === "weighted" ? { color: "#991b1b" } : null),
         }}
       >
-        The Lived Burden
+        Burden View
       </button>
     </div>
   );
