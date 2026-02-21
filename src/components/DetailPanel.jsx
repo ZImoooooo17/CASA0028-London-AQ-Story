@@ -122,7 +122,7 @@ function Muted({ children, style }) {
   return <div style={{ color: "rgba(15,23,42,0.55)", ...style }}>{children}</div>;
 }
 
-/* ---------------- interpretation rules (single source of truth) ---------------- */
+/* ---------------- interpretation rules ---------------- */
 
 function interpretBurden(burdenRatio) {
   const r = safeNum(burdenRatio);
@@ -171,7 +171,6 @@ function interpretBurden(burdenRatio) {
     };
   }
 
-  // 0.95–1.05
   return {
     tone: "neutral",
     label: "Roughly proportional",
@@ -180,7 +179,7 @@ function interpretBurden(burdenRatio) {
   };
 }
 
-/* ---------------- shift driver (ties RankJump + Ratio together) ---------------- */
+/* ---------------- shift driver ---------------- */
 
 function getShiftDriver(burdenRatio, absJump) {
   const r = safeNum(burdenRatio);
@@ -194,7 +193,7 @@ function getShiftDriver(burdenRatio, absJump) {
     };
   }
 
-  const nearOne = Math.abs(r - 1) <= 0.05; // ≈ proportional
+  const nearOne = Math.abs(r - 1) <= 0.05;
   const bigShift = j >= 6;
 
   if (bigShift && r >= 1.15) {
@@ -255,8 +254,7 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
       arrow: "↑",
       verb: "rises",
       story: `Visibility Penalty: when population is counted, ${name} rises ${absJ} places in the hierarchy of concern.`,
-      meaning:
-        "This shift suggests the conventional average can underrepresent lived exposure where many people are affected.",
+      meaning: "This shift suggests the conventional average can underrepresent lived exposure where many people are affected.",
     },
     down: {
       accent: "#2563eb",
@@ -265,8 +263,7 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
       arrow: "↓",
       verb: "falls",
       story: `Spatial Buffer: ${name} falls ${absJ} places once population exposure is considered.`,
-      meaning:
-        "Here, raw concentration can look severe even when fewer residents are exposed relative to other boroughs.",
+      meaning: "Here, raw concentration can look severe even when fewer residents are exposed relative to other boroughs.",
     },
     same: {
       accent: "rgba(15,23,42,0.60)",
@@ -289,11 +286,7 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
   }[dir];
 
   const headline =
-    dir === "unknown"
-      ? "Rank shift unavailable"
-      : dir === "same"
-      ? "No re-ranking"
-      : `${palette.verb} by ${absJ} places`;
+    dir === "unknown" ? "Rank shift unavailable" : dir === "same" ? "No re-ranking" : `${palette.verb} by ${absJ} places`;
 
   const pulse = severity === "high" ? "pulseStrong" : severity === "med" ? "pulse" : "";
   const tag = absJ >= 3 ? "Re-ranked" : absJ > 0 ? "Shift" : "Stable";
@@ -348,10 +341,7 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
                 </Pill>
 
                 {absJ >= 6 && dir !== "same" && (
-                  <Pill
-                    tone={dir === "up" ? "red" : "blue"}
-                    title="Large shifts indicate the city’s ordering changes under different metrics."
-                  >
+                  <Pill tone={dir === "up" ? "red" : "blue"} title="Large shifts indicate the city’s ordering changes under different metrics.">
                     {absJ >= 10 ? "Major shift" : "Notable shift"}
                   </Pill>
                 )}
@@ -385,28 +375,12 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
           </div>
 
           <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 16,
-                border: "1px solid rgba(15,23,42,0.10)",
-                background: "rgba(15,23,42,0.04)",
-              }}
-            >
+            <div style={{ padding: 14, borderRadius: 16, border: "1px solid rgba(15,23,42,0.10)", background: "rgba(15,23,42,0.04)" }}>
               <Label style={{ color: "rgba(37,99,235,0.85)" }}>Raw rank</Label>
-              <div style={{ fontSize: 30, fontWeight: 950, letterSpacing: "-0.8px" }}>
-                {rr == null ? "N/A" : `#${rr}`}
-              </div>
+              <div style={{ fontSize: 30, fontWeight: 950, letterSpacing: "-0.8px" }}>{rr == null ? "N/A" : `#${rr}`}</div>
             </div>
 
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 16,
-                border: "1px solid rgba(15,23,42,0.10)",
-                background: "rgba(15,23,42,0.04)",
-              }}
-            >
+            <div style={{ padding: 14, borderRadius: 16, border: "1px solid rgba(15,23,42,0.10)", background: "rgba(15,23,42,0.04)" }}>
               <Label style={{ color: "rgba(229,62,62,0.90)" }}>Burden rank</Label>
               <div style={{ fontSize: 30, fontWeight: 950, letterSpacing: "-0.8px", color: palette.accent }}>
                 {wr == null ? "N/A" : `#${wr}`}
@@ -608,23 +582,20 @@ function StatCard({ label, value, sub, tone = "neutral" }) {
 export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) {
   if (!selectedFeature) return null;
 
-  const isBurden = mode !== "raw"; // ✅ 不依赖具体字符串
+  const isBurden = mode !== "raw";
 
   const p = selectedFeature.properties || {};
   const name = p.LAD22NM || "Borough";
 
-  // ✅ ranks: allow multiple naming just in case
   const rawRank = safeNum(p.rawRank ?? p.RawRank ?? p.raw_rank);
   const weightedRank = safeNum(p.weightedRank ?? p.WeightedRank ?? p.weighted_rank);
   const rankJump = safeNum(p.rankJump ?? p.RankJump ?? p.rank_jump);
 
-  // ✅ ratio + shares: allow multiple naming
   const burdenRatio = safeNum(p.burdenRatio ?? p.BurdenRatio ?? p.burden_ratio);
   const interp = interpretBurden(burdenRatio);
 
   const pop = safeNum(p.Population ?? p.population ?? p.pop);
 
-  // 🔥 你原来这里写的是 p.popShare，容易导致 N/A
   const burdenShare = safeNum(p.burdenShare ?? p.burden_share);
   const popShare = safeNum(p.populationShare ?? p.popShare ?? p.population_share);
 
@@ -647,6 +618,9 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
         pillTone: "red",
         pillText: "The Lived Burden",
       };
+
+  // ✅ 改 3：仅在 Burden + jump ≥ 5 时出现强提示
+  const showJumpMoment = isBurden && rankJump != null && Math.abs(rankJump) >= 5;
 
   return (
     <div
@@ -687,6 +661,26 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
           ✕
         </button>
       </div>
+
+      {/* ✅ 新增：强叙事提示（仅在 Burden + 大跳跃） */}
+      {showJumpMoment && (
+        <div
+          style={{
+            borderRadius: 16,
+            border: "1px solid rgba(251,191,36,0.55)",
+            background: "rgba(254,243,199,0.65)",
+            padding: "12px 14px",
+            boxShadow: "0 10px 22px rgba(0,0,0,0.06)",
+          }}
+        >
+          <div style={{ fontWeight: 950, color: "rgba(15,23,42,0.92)", letterSpacing: "-0.2px" }}>
+            Look what just happened.
+          </div>
+          <div style={{ marginTop: 4, fontSize: 12.8, color: "rgba(15,23,42,0.72)", lineHeight: 1.55 }}>
+            This borough moves <strong>{Math.abs(rankJump)}</strong> places when exposure is population-weighted.
+          </div>
+        </div>
+      )}
 
       {/* narrative */}
       <Card style={{ padding: 16 }}>

@@ -32,15 +32,21 @@ function IntroModal({ onStart, onSelectCase }) {
           overflow: "hidden",
         }}
       >
-        <div style={{ padding: 18, borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 12 }}>
+        <div
+          style={{
+            padding: 18,
+            borderBottom: "1px solid #e2e8f0",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
           <div style={{ width: 34, height: 34, background: "#0f172a", borderRadius: 10 }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 950, fontSize: 16, letterSpacing: "-0.4px", color: "#0f172a" }}>
               Average Air, Uneven Burdens
             </div>
-            <div style={{ fontSize: 12.5, color: "#475569", marginTop: 2 }}>
-              A mode switch can reorder the city.
-            </div>
+            <div style={{ fontSize: 12.5, color: "#475569", marginTop: 2 }}>A mode switch can reorder the city.</div>
           </div>
           <button
             onClick={onStart}
@@ -70,9 +76,7 @@ function IntroModal({ onStart, onSelectCase }) {
                 <strong>The Lived Burden</strong>: population-weighted exposure (and its inequality signals).
               </li>
             </ul>
-            <div style={{ marginTop: 8 }}>
-              Switch modes to see how rankings change when people are counted.
-            </div>
+            <div style={{ marginTop: 8 }}>Switch modes to see how rankings change when people are counted.</div>
           </div>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -131,14 +135,9 @@ function NarrativeIntro({ mode, onReplayIntro }) {
 
             <p style={{ margin: "6px 0 0", color: "#475569", fontSize: 13.2, lineHeight: 1.55 }}>
               {mode === "raw" ? (
-                <>
-                  Borough mean NO₂ concentration is useful — but it can hide how many people live with exposure.
-                </>
+                <>Borough mean NO₂ concentration is useful — but it can hide how many people live with exposure.</>
               ) : (
-                <>
-                  Population weighting can reorder rankings —
-                  revealing where “average” air hides disproportionate exposure.
-                </>
+                <>Population weighting can reorder rankings — revealing where “average” air hides disproportionate exposure.</>
               )}
             </p>
 
@@ -173,10 +172,10 @@ function NarrativeIntro({ mode, onReplayIntro }) {
                   lineHeight: 1.55,
                 }}
               >
-                <strong>The Statistical Average</strong> is an average concentration. <strong>The Lived Burden</strong> compares a
-                borough’s <em>share of total exposure</em> with its <em>share of population</em>. That’s why the map
-                can “reorder” — the same pollution level can imply very different impacts depending on how many
-                people are exposed.
+                <strong>The Statistical Average</strong> is an average concentration. <strong>The Lived Burden</strong>{" "}
+                compares a borough’s <em>share of total exposure</em> with its <em>share of population</em>. That’s why
+                the map can “reorder” — the same pollution level can imply very different impacts depending on how
+                many people are exposed.
               </div>
             )}
 
@@ -433,23 +432,18 @@ export default function App() {
   };
 
   const triggerReorderDramaturgy = (nextMode) => {
-    // toast dramaturgy
     setShowReorderToast(true);
     window.setTimeout(() => setShowReorderToast(false), 1600);
 
     if (!data?.features?.length) return;
 
     if (nextMode === "weighted") {
-      // Prefer “moves up” (more concerning) rather than absolute change
       const focusId = data?.meta?.maxUpJumpId || data?.meta?.maxAbsJumpId;
-
       if (focusId) {
         setSpotlightId(focusId);
-        // also select + fly to it to make the “reordering” feel concrete
         setTimeout(() => handleSelect(focusId), 450);
       }
     } else {
-      // leaving burden mode: clear spotlight
       setSpotlightId(null);
     }
   };
@@ -477,7 +471,7 @@ export default function App() {
       {/* Header */}
       <header
         style={{
-          height: 65,
+          height: 68,
           background: "#fff",
           borderBottom: "1px solid #e2e8f0",
           display: "flex",
@@ -495,22 +489,30 @@ export default function App() {
               Average Air, Uneven Burdens
             </h1>
 
+            {/* ✅ 改 1：更强的 opening statement（固定两行） */}
             <div style={{ fontSize: 12, color: "#64748b", marginTop: 2, lineHeight: 1.25 }}>
               London’s air pollution appears average — until we change how we measure it.
-              <span style={{ display: "block" }}>Switching modes changes how London is ranked.</span>
-              <span style={{ display: "block" }}>Averages may obscure lived exposure.</span>
+              <span style={{ display: "block" }}>Switch viewing modes to see how borough rankings change.</span>
+
+              {/* ✅ 改 2：ethical hint 仅在 weighted 出现 */}
+              {mode === "weighted" && <span style={{ display: "block" }}>Averages may obscure lived exposure.</span>}
             </div>
           </div>
         </div>
 
-        <div style={{ background: "#0f172a", padding: 4, borderRadius: 12 }}>
-          <ModeToggle
-            mode={mode}
-            onMode={(next) => {
-              setMode(next);
-              triggerReorderDramaturgy(next);
-            }}
-          />
+        {/* ✅ 改 4：toggle 旁边加 “Viewing mode reshapes the city.” */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700 }}>Viewing mode reshapes the city.</div>
+
+          <div style={{ background: "#0f172a", padding: 4, borderRadius: 12 }}>
+            <ModeToggle
+              mode={mode}
+              onMode={(next) => {
+                setMode(next);
+                triggerReorderDramaturgy(next);
+              }}
+            />
+          </div>
         </div>
       </header>
 

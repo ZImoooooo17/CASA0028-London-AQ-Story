@@ -7,6 +7,11 @@ function formatNum(x, digits = 2) {
   return Number(x).toFixed(digits);
 }
 
+function formatPct01(x, digits = 1) {
+  if (x === null || x === undefined || Number.isNaN(Number(x))) return "N/A";
+  return `${(Number(x) * 100).toFixed(digits)}%`;
+}
+
 export default function MapView({
   data,
   mode,
@@ -78,12 +83,23 @@ export default function MapView({
       };
     }
 
+    // ✅ weighted: 颜色依据是 burdenRatio，但同时显示 share，避免“7% 为什么红”的误解
     const ratio = p.burdenRatio;
+    const burdenShare = p.burdenShare; // 0~1
+    const popShare = p.populationShare ?? p.popShare; // 0~1
+
     return {
       title: name,
-      lines: [`Burden ratio: ${formatNum(ratio, 2)}`, `1.00 = proportional burden`],
+      lines: [
+        `Burden ratio (color): ${formatNum(ratio, 2)}×`,
+        `Burden share: ${formatPct01(burdenShare, 1)}`,
+        `Population share: ${formatPct01(popShare, 2)}`,
+        `1.00 = proportional (share ÷ share)`,
+      ],
     };
   }, [hoverPopup, mode]);
+
+  const showMeaningCard = mode !== "raw";
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
@@ -155,6 +171,37 @@ export default function MapView({
         )}
       </Map>
 
+      {/* ✅ 小型“意义卡片”：补全 legend 解释（不替代 App 的 LegendCard） */}
+      {showMeaningCard && (
+        <div
+          style={{
+            position: "absolute",
+            right: 16,
+            bottom: 16,
+            zIndex: 1200,
+            width: 320,
+            background: "rgba(255,255,255,0.92)",
+            border: "1px solid #e2e8f0",
+            borderRadius: 16,
+            padding: "10px 12px",
+            boxShadow: "0 10px 24px rgba(0,0,0,0.10)",
+            backdropFilter: "blur(8px)",
+            pointerEvents: "none",
+          }}
+        >
+          <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b" }}>
+            Color meaning
+          </div>
+          <div style={{ marginTop: 6, fontSize: 12.5, color: "#334155", lineHeight: 1.35 }}>
+            Map color encodes <strong>burden ratio</strong> ={" "}
+            <strong>burden share</strong> ÷ <strong>population share</strong>.
+            <div style={{ marginTop: 6, color: "#475569" }}>
+              A borough can be red even if its burden share is small, if its population share is even smaller.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ✅ Hover tooltip */}
       {tooltip && hoverPopup?.x != null && hoverPopup?.y != null && (
         <div
@@ -169,7 +216,7 @@ export default function MapView({
             borderRadius: 14,
             padding: "10px 12px",
             boxShadow: "0 10px 24px rgba(0,0,0,0.12)",
-            maxWidth: 240,
+            maxWidth: 260,
           }}
         >
           <div style={{ fontWeight: 900, marginBottom: 6, color: "#111827" }}>{tooltip.title}</div>

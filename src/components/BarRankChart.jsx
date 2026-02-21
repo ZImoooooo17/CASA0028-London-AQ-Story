@@ -5,6 +5,12 @@ function num(x, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function fmtPct01(x, digits = 1) {
+  const n = Number(x);
+  if (!Number.isFinite(n)) return null;
+  return `${(n * 100).toFixed(digits)}%`;
+}
+
 export default function BarRankChart({ data, mode, selectedId, onSelect, onHover }) {
   const itemRefs = useRef({});
 
@@ -12,15 +18,20 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
     if (!data?.features?.length) return [];
 
     if (mode === "weighted") {
-      // 方案B：排序依据 totalExposure；显示 exposureIndex（Avg=100%）
+      // ✅ weighted：排序依据 totalExposure（NO₂ × population）
+      // 显示 Exposure Index（Avg = 100%） + burdenShare（share %）避免误解
       return [...data.features]
         .sort((a, b) => num(b.properties?.totalExposure) - num(a.properties?.totalExposure))
         .map((f) => {
           const idx = num(f.properties?.exposureIndex); // Avg=100
+          const bShare = f.properties?.burdenShare; // 0~1
+          const shareText = fmtPct01(bShare, 1);
+
           return {
             id: f.id,
             name: f.properties?.LAD22NM || "Borough",
-            display: `${idx.toFixed(0)}%`,
+            displayPrimary: `${idx.toFixed(0)}%`,
+            displaySecondary: shareText ? `${shareText} share` : null,
             barWidthPct: `${Math.min(idx / 2, 100)}%`, // 200% -> 100%宽；100% -> 50%宽
             isHigh: idx >= 120,
           };
@@ -35,7 +46,8 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
         return {
           id: f.id,
           name: f.properties?.LAD22NM || "Borough",
-          display: `${v.toFixed(1)} µg/m³`,
+          displayPrimary: `${v.toFixed(1)} µg/m³`,
+          displaySecondary: null,
           barWidthPct: `${Math.min(v * 2, 100)}%`,
           isHigh: v >= 30,
         };
@@ -48,32 +60,52 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
     }
   }, [selectedId]);
 
+  const title = mode === "raw" ? "Ranking by NO₂ Concentration" : "Ranking by Total Exposure";
+  const subtitle =
+    mode === "raw"
+      ? "Borough mean concentration (µg/m³)."
+      : "Population burden ordering: NO₂ × population (Exposure Index shown; Avg = 100%).";
+
   return (
     <div style={{ padding: 15, height: "100%", display: "flex", flexDirection: "column" }}>
-      <h3
+      <div
         style={{
-          fontSize: 11,
-          color: "#888",
-          textTransform: "uppercase",
-          letterSpacing: 1,
-          marginBottom: 20,
           position: "sticky",
           top: 0,
           background: "white",
-          padding: "10px 0",
+          padding: "10px 0 12px",
           zIndex: 10,
+          borderBottom: "1px solid #f1f5f9",
         }}
       >
-        Ranking by {mode === "raw" ? "NO₂ Concentration" : "Population Burden"}
-      </h3>
+        <h3
+          style={{
+            fontSize: 11,
+            color: "#64748b",
+            textTransform: "uppercase",
+            letterSpacing: 1,
+            margin: 0,
+            fontWeight: 900,
+          }}
+        >
+          {title}
+        </h3>
+        <div style={{ marginTop: 6, fontSize: 11.5, color: "#94a3b8", lineHeight: 1.35 }}>{subtitle}</div>
 
-      <div style={{ flex: 1, position: "relative" }}>
+        {mode === "weighted" && (
+          <div style={{ marginTop: 6, fontSize: 11.5, color: "#94a3b8", lineHeight: 1.35 }}>
+            Map color shows <strong>burden ratio</strong> (burden share ÷ population share), not the share itself.
+          </div>
+        )}
+      </div>
+
+      <div style={{ flex: 1, position: "relative", paddingTop: 10 }}>
         {mode === "weighted" && (
           <div
             style={{
               position: "absolute",
               left: "50%",
-              top: 0,
+              top: 10,
               bottom: 0,
               width: 1,
               borderLeft: "1px dashed #cbd5e0",
@@ -84,11 +116,11 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
             <span
               style={{
                 position: "absolute",
-                top: -15,
-                left: -20,
+                top: -14,
+                left: -22,
                 fontSize: 9,
                 color: "#94a3b8",
-                fontWeight: "bold",
+                fontWeight: 900,
               }}
             >
               AVG (100%)
@@ -117,12 +149,33 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
                   transition: "all 0.2s",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, fontWeight: isSelected ? 700 : 500, color: isSelected ? "#007bff" : "#333" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, gap: 10 }}>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: isSelected ? 700 : 500,
+                      color: isSelected ? "#007bff" : "#333",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      maxWidth: 220,
+                    }}
+                  >
                     {item.name}
                   </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: item.isHigh ? "#ef4444" : "#64748b" }}>
-                    {item.display}
+
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: item.isHigh ? "#ef4444" : "#64748b",
+                      textAlign: "right",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {mode === "weighted" && item.displaySecondary
+                      ? `${item.displayPrimary} · ${item.displaySecondary}`
+                      : item.displayPrimary}
                   </span>
                 </div>
 
@@ -142,19 +195,23 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
         </div>
       </div>
 
-      <div style={{ marginTop: 20, padding: 15, borderTop: "1px solid #eee", background: "#fdfdfd", borderRadius: 8 }}>
-        <div style={{ fontSize: 10, fontWeight: 800, color: "#64748b", marginBottom: 6, textTransform: "uppercase" }}>
+      <div style={{ marginTop: 14, padding: 14, borderTop: "1px solid #eee", background: "#fdfdfd", borderRadius: 8 }}>
+        <div style={{ fontSize: 10, fontWeight: 900, color: "#64748b", marginBottom: 6, textTransform: "uppercase" }}>
           Methodology & Data
         </div>
 
         {mode === "weighted" ? (
-          <p style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.5, margin: 0 }}>
-            <strong>Population Burden</strong> ranks boroughs by <strong>total exposure</strong> (NO₂ × population).<br />
-            Values shown as <strong>Exposure Index</strong> where <strong>Avg = 100%</strong>.<br />
-            Map colors show <strong>Inequity ratio</strong> (burden share ÷ population share).
+          <p style={{ fontSize: 10.5, color: "#94a3b8", lineHeight: 1.5, margin: 0 }}>
+            <strong>Total Exposure</strong> ranks boroughs by <strong>NO₂ × population</strong>.
+            <br />
+            Values shown as <strong>Exposure Index</strong> where <strong>Avg = 100%</strong>.
+            <br />
+            <strong>Share</strong> is each borough’s fraction of total exposure (not what map color encodes).
+            <br />
+            Map color encodes <strong>burden ratio</strong> = burden share ÷ population share.
           </p>
         ) : (
-          <p style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.5, margin: 0 }}>
+          <p style={{ fontSize: 10.5, color: "#94a3b8", lineHeight: 1.5, margin: 0 }}>
             <strong>Raw NO₂</strong> ranks boroughs by borough-average concentration (µg/m³).
           </p>
         )}
