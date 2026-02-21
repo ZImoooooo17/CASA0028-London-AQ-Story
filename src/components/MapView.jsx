@@ -150,6 +150,13 @@ export default function MapView({
     ];
   }, [mode]);
 
+  /* 🔥 三、模式切换时强制 repaint (优化位置) */
+  useEffect(() => {
+    const map = mapRef?.current?.getMap?.();
+    if (!map) return;
+    map.triggerRepaint();
+  }, [mode, mapRef]);
+
   const onMapLoad = (e) => {
     const layers = e.target.getStyle().layers;
     const labelLayer = layers.find(
@@ -234,28 +241,40 @@ export default function MapView({
             data={data}
             promoteId="LAD22CD"
           >
+            {/* 🔥 一、给 fill layer 加颜色过渡 */}
             <Layer
               id="borough-fill"
               type="fill"
               beforeId={labelLayerId}
               paint={{
                 "fill-color": fillColorExpr,
-                "fill-opacity": 0.9,
+                "fill-opacity": 0.88,
+                "fill-color-transition": {
+                  duration: 600,
+                  delay: 0,
+                },
+                "fill-opacity-transition": {
+                  duration: 400,
+                },
               }}
             />
 
+            {/* 🔥 二、修改 spotlight outline：黑色强化 + Transition */}
             <Layer
               id="borough-spotlight-outline"
               type="line"
               beforeId={labelLayerId}
               filter={["==", ["get", "LAD22CD"], spotlightId || ""]}
               paint={{
-                "line-color": "#111827",
-                "line-width": 2.5,
-                "line-opacity": 0.85,
+                "line-color": "#0f172a",
+                "line-width": 3,
+                "line-opacity": 0.95,
+                "line-width-transition": { duration: 400 },
+                "line-opacity-transition": { duration: 300 },
               }}
             />
 
+            {/* 🔥 四、hover outline 也加 transition */}
             <Layer
               id="borough-hover-outline"
               type="line"
@@ -264,16 +283,20 @@ export default function MapView({
               paint={{
                 "line-color": "#f59e0b",
                 "line-width": 3,
+                "line-width-transition": { duration: 200 },
               }}
             />
 
+            {/* 🔥 二、修改 selected outline：蓝色强化 + Transition */}
             <Layer
               id="borough-select-outline"
               type="line"
               filter={["==", ["get", "LAD22CD"], selectedId || ""]}
               paint={{
-                "line-color": "#111827",
-                "line-width": 3,
+                "line-color": "#1e40af",
+                "line-width": 3.5,
+                "line-opacity": 0.95,
+                "line-width-transition": { duration: 300 },
               }}
             />
           </Source>

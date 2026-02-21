@@ -4,47 +4,78 @@ export default function IntroModal({ open, onClose }) {
   return (
     <div style={backdrop} onMouseDown={onClose}>
       <div style={panel} onMouseDown={(e) => e.stopPropagation()}>
+        
+        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
           <div>
-            <div style={{ fontWeight: 900, fontSize: 18 }}>
-              Why two modes?
+            <div style={{ fontWeight: 950, fontSize: 22, letterSpacing: "-0.4px" }}>
+              What changes when we stop looking at averages?
             </div>
-            <div style={{ marginTop: 6, opacity: 0.9, lineHeight: 1.45, fontSize: 13 }}>
-              London’s “average” air quality is not neutral.
-              Borough averages can conceal how many people live with high exposure.
-              Switching modes shows how rankings shift when population is considered—revealing uneven burdens.
+
+            <div
+              style={{
+                marginTop: 10,
+                lineHeight: 1.6,
+                fontSize: 14,
+                color: "#cbd5e1",
+              }}
+            >
+              London’s air quality is often summarised as a borough average.
+              But averages can obscure how many people actually live with exposure.
+              <br />
+              <br />
+              This interface lets you switch perspectives — and watch the city reorder itself.
             </div>
           </div>
-          <button onClick={onClose} style={closeBtn}>✕</button>
+
+          <button onClick={onClose} style={closeBtn}>
+            ✕
+          </button>
         </div>
 
-        <div style={tips}>
-          <div style={tipCard}>
-            <div style={tipTitle}>Try this</div>
-            <div style={tipText}>Pick a borough in Raw mode, then switch to Population Burden.</div>
+        {/* Tension cards */}
+        <div style={cards}>
+          <div style={card}>
+            <div style={cardTitle}>Lens 1</div>
+            <div style={cardText}>
+              Boroughs ranked by mean NO₂ concentration.
+            </div>
           </div>
-          <div style={tipCard}>
-            <div style={tipTitle}>Look for</div>
-            <div style={tipText}>Large rank jumps and high burden ratios (burden share ÷ population share).</div>
+
+          <div style={card}>
+            <div style={cardTitle}>Lens 2</div>
+            <div style={cardText}>
+              Boroughs re-ranked by population-weighted exposure.
+            </div>
           </div>
-          <div style={tipCard}>
-            <div style={tipTitle}>Interpretation</div>
-            <div style={tipText}>A ratio above 1 means the borough bears more pollution burden than its population share.</div>
+
+          <div style={card}>
+            <div style={cardTitle}>Notice</div>
+            <div style={cardText}>
+              When the ranking shifts, ask: who becomes more visible — and why?
+            </div>
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
-          <button onClick={onClose} style={primaryBtn}>Start exploring</button>
+        {/* CTA */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+          <button onClick={onClose} style={primaryBtn}>
+            Enter the Interface
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
+/* ===========================
+   Styles
+=========================== */
+
 const backdrop = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.55)",
+  background: "rgba(0,0,0,0.6)",
   display: "grid",
   placeItems: "center",
   zIndex: 50,
@@ -52,12 +83,12 @@ const backdrop = {
 };
 
 const panel = {
-  width: "min(720px, 100%)",
+  width: "min(760px, 100%)",
   background: "rgba(15,23,42,0.98)",
   border: "1px solid rgba(255,255,255,0.12)",
-  borderRadius: 16,
-  padding: 16,
-  boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+  borderRadius: 18,
+  padding: 24,
+  boxShadow: "0 25px 80px rgba(0,0,0,0.6)",
   color: "#e5e7eb",
 };
 
@@ -72,29 +103,43 @@ const closeBtn = {
   fontWeight: 900,
 };
 
-const tips = {
-  marginTop: 14,
+const cards = {
+  marginTop: 20,
   display: "grid",
   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  gap: 10,
+  gap: 14,
 };
 
-const tipCard = {
+const card = {
   border: "1px solid rgba(255,255,255,0.10)",
-  borderRadius: 14,
-  padding: 12,
-  background: "rgba(255,255,255,0.04)",
+  borderRadius: 16,
+  padding: 14,
+  background: "rgba(255,255,255,0.05)",
 };
 
-const tipTitle = { fontWeight: 900, marginBottom: 6, fontSize: 12, opacity: 0.9 };
-const tipText = { fontSize: 12.5, lineHeight: 1.35, opacity: 0.95 };
+const cardTitle = {
+  fontWeight: 900,
+  marginBottom: 6,
+  fontSize: 12,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
+  color: "#94a3b8",
+};
+
+const cardText = {
+  fontSize: 13,
+  lineHeight: 1.5,
+  color: "#e2e8f0",
+};
 
 const primaryBtn = {
   border: "1px solid rgba(59,130,246,0.55)",
   background: "rgba(59,130,246,0.35)",
   color: "#e5e7eb",
-  padding: "10px 12px",
-  borderRadius: 12,
+  padding: "12px 16px",
+  borderRadius: 14,
   cursor: "pointer",
   fontWeight: 900,
+  fontSize: 14,
+  transition: "all 0.25s ease",
 };

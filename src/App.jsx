@@ -9,7 +9,7 @@ import useLondonData from "./hooks/useLondonData";
 /**
  * Intro Modal - 叙事钩子与视觉引导
  */
-function IntroModal({ onStart, onSelectCase }) {
+function IntroModal({ onStart, onSelectCase, data }) {
   return (
     <div
       style={{
@@ -97,7 +97,8 @@ function IntroModal({ onStart, onSelectCase }) {
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
-              onClick={() => onSelectCase("E09000005")}
+              /* 🎯 修改四：去掉硬编码，改用数据驱动 */
+              onClick={() => onSelectCase(data?.meta?.maxUpJumpId || "E09000005")}
               style={{
                 border: "1px solid #e2e8f0",
                 background: "#0f172a",
@@ -349,7 +350,9 @@ export default function App() {
   const flyToFeature = (id) => {
     const map = mapRef.current?.getMap?.();
     const feature = findFeatureById(id);
-    if (!map || !feature) return;
+    
+    /* 🎯 修改五：增加安全判断 */
+    if (!map || !feature?.geometry?.coordinates) return;
 
     const hasRightPanel = Boolean(id);
     const padding = hasRightPanel
@@ -358,6 +361,7 @@ export default function App() {
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        if (!mapRef.current) return;
         map.resize();
         map.fitBounds(scanBounds(feature.geometry.coordinates), {
           padding,
@@ -378,20 +382,22 @@ export default function App() {
     setTimeout(() => handleSelect(id), 600);
   };
 
+  /* 🎯 修改二 & 六：戏剧化重排逻辑双向化 + Toast 时间紧凑 */
   const triggerReorderDramaturgy = (nextMode) => {
     setShowReorderToast(true);
-    window.setTimeout(() => setShowReorderToast(false), 1600);
+    /* 修改六：1200ms 更紧凑 */
+    window.setTimeout(() => setShowReorderToast(false), 1200);
 
     if (!data?.features?.length) return;
 
-    if (nextMode === "weighted") {
-      const focusId = data?.meta?.maxUpJumpId || data?.meta?.maxAbsJumpId;
-      if (focusId) {
-        setSpotlightId(focusId);
-        setTimeout(() => handleSelect(focusId), 450);
-      }
-    } else {
-      setSpotlightId(null);
+    /* 修改二：双向可见 */
+    const focusId = nextMode === "weighted"
+      ? data?.meta?.maxUpJumpId || data?.meta?.maxAbsJumpId
+      : data?.meta?.maxDownJumpId || data?.meta?.maxAbsJumpId;
+
+    if (focusId) {
+      setSpotlightId(focusId);
+      setTimeout(() => handleSelect(focusId), 450);
     }
   };
 
@@ -415,7 +421,8 @@ export default function App() {
 
   return (
     <div className="storyPage">
-      {showIntro && <IntroModal onStart={() => setShowIntro(false)} onSelectCase={handleCaseSelect} />}
+      {/* 🎯 修改四：传入 data */}
+      {showIntro && <IntroModal data={data} onStart={() => setShowIntro(false)} onSelectCase={handleCaseSelect} />}
 
       {/* Header */}
       <header
@@ -455,7 +462,9 @@ export default function App() {
           <div style={{ background: "#0f172a", padding: 4, borderRadius: 12 }}>
             <ModeToggle
               mode={mode}
+              /* 🎯 修改三：清理旧选中状态 */
               onMode={(next) => {
+                setSelectedId(null); 
                 setMode(next);
                 triggerReorderDramaturgy(next);
               }}
@@ -472,6 +481,7 @@ export default function App() {
 
       <NarrativeIntro mode={mode} onReplayIntro={() => setShowIntro(true)} />
 
+      {/* 🎯 修改一：Toast 文案视觉强化 */}
       {showReorderToast && (
         <div
           style={{
@@ -490,7 +500,7 @@ export default function App() {
             backdropFilter: "blur(10px)",
           }}
         >
-          Look what just happened.
+          London has just been re-ranked. Rankings are not neutral.
         </div>
       )}
 

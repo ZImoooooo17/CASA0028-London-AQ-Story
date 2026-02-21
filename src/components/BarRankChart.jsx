@@ -1,4 +1,6 @@
 import React, { useMemo, useEffect, useRef } from "react";
+// ① 顶部引入：加入 motion
+import { motion } from "framer-motion";
 
 function num(x, fallback = 0) {
   const n = Number(x);
@@ -17,7 +19,10 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
   const list = useMemo(() => {
     if (!data?.features?.length) return [];
 
+    // 🎯 优化 1：动态计算最大值，确保 barWidth 比例真实
     if (mode === "weighted") {
+      const maxExp = Math.max(...data.features.map(f => num(f.properties?.exposureIndex)));
+      
       return [...data.features]
         .sort((a, b) => num(b.properties?.totalExposure) - num(a.properties?.totalExposure))
         .map((f) => {
@@ -30,11 +35,14 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
             name: f.properties?.LAD22NM || "Borough",
             displayPrimary: `${idx.toFixed(0)}%`,
             displaySecondary: shareText ? `${shareText} share` : null,
-            barWidthPct: `${Math.min(idx / 2, 100)}%`,
+            // 使用相对比例计算
+            barWidthPct: `${(idx / maxExp) * 100}%`,
             isHigh: idx >= 120,
           };
         });
     }
+
+    const maxNO2 = Math.max(...data.features.map(f => num(f.properties?.NO2)));
 
     return [...data.features]
       .sort((a, b) => num(b.properties?.NO2) - num(a.properties?.NO2))
@@ -45,7 +53,8 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
           name: f.properties?.LAD22NM || "Borough",
           displayPrimary: `${v.toFixed(1)} µg/m³`,
           displaySecondary: null,
-          barWidthPct: `${Math.min(v * 2, 100)}%`,
+          // 使用相对比例计算
+          barWidthPct: `${(v / maxNO2) * 100}%`,
           isHigh: v >= 30,
         };
       });
@@ -93,13 +102,23 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
       </div>
 
       <div style={{ flex: 1, position: "relative", paddingTop: 10 }}>
-        <div style={{ position: "relative", zIndex: 1 }}>
-          {list.map((item) => {
+        {/* ② 列表外层 layout 容器 */}
+        <motion.div layout style={{ position: "relative", zIndex: 1 }}>
+          {list.map((item, index) => {
             const isSelected = item.id === selectedId;
 
             return (
-              <div
+              /* ③ motion.div 强化：引入 layout、呼吸感渐变和排名数字 */
+              <motion.div
                 key={item.id}
+                layout
+                // 🎯 优化 2：给重排加轻微 fade 呼吸感
+                initial={{ opacity: 0.9 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  layout: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+                  opacity: { duration: 0.4 }
+                }}
                 ref={(el) => (itemRefs.current[item.id] = el)}
                 onClick={() => onSelect?.(item.id)}
                 onMouseEnter={() => onHover?.(item.id)}
@@ -143,8 +162,19 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
                       textOverflow: "ellipsis",
                       maxWidth: 220,
                       transition: "color 0.3s ease",
+                      display: "flex",
+                      alignItems: "center"
                     }}
                   >
+                    {/* 🎯 强化：加入 rank number */}
+                    <span style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: "#94a3b8",
+                      marginRight: 6
+                    }}>
+                      #{index + 1}
+                    </span>
                     {item.name}
                   </span>
 
@@ -184,10 +214,10 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
                     }}
                   />
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
 
       <div
