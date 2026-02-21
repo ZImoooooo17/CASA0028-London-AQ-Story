@@ -262,322 +262,264 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
       accentBorder: "rgba(37,99,235,0.22)",
       arrow: "↓",
       verb: "falls",
-      story: `Spatial Buffer: ${name} falls ${absJ} places once population exposure is considered.`,
-      meaning: "Here, raw concentration can look severe even when fewer residents are exposed relative to other boroughs.",
+      story: `Visibility Bonus: when population is counted, ${name} falls ${absJ} places in the hierarchy of concern.`,
+      meaning: "This suggests population weighting reduces prominence relative to borough averages.",
     },
     same: {
-      accent: "rgba(15,23,42,0.60)",
+      accent: "rgba(15,23,42,0.75)",
       accentSoft: "rgba(15,23,42,0.06)",
       accentBorder: "rgba(15,23,42,0.12)",
       arrow: "→",
       verb: "stays",
-      story: `Alignment: ${name} tells a consistent story in both metrics.`,
-      meaning: "The statistical average and the lived burden agree closely for this borough.",
+      story: `Stability: ${name} stays in roughly the same position across both lenses.`,
+      meaning: "This suggests the two measurements align for this borough.",
     },
     unknown: {
-      accent: "rgba(15,23,42,0.60)",
+      accent: "rgba(15,23,42,0.75)",
       accentSoft: "rgba(15,23,42,0.06)",
       accentBorder: "rgba(15,23,42,0.12)",
-      arrow: "→",
-      verb: "changes",
-      story: `Rank shift could not be computed for ${name}.`,
-      meaning: "Rank fields are unavailable.",
+      arrow: "·",
+      verb: "shifts",
+      story: "Rank shift unavailable.",
+      meaning: "Not enough data to compute change.",
     },
-  }[dir];
+  };
 
-  const headline =
-    dir === "unknown" ? "Rank shift unavailable" : dir === "same" ? "No re-ranking" : `${palette.verb} by ${absJ} places`;
-
-  const pulse = severity === "high" ? "pulseStrong" : severity === "med" ? "pulse" : "";
-  const tag = absJ >= 3 ? "Re-ranked" : absJ > 0 ? "Shift" : "Stable";
+  const p = palette[dir] || palette.unknown;
 
   const driver = getShiftDriver(burdenRatio, absJ);
 
-  const maxShown = 33;
-  const rawPos = rr == null ? 0.5 : clamp(rr / maxShown, 0, 1);
-  const weightedPos = wr == null ? 0.5 : clamp(wr / maxShown, 0, 1);
+  const badge = {
+    high: { text: "Notable shift", tone: "red" },
+    med: { text: "Meaningful shift", tone: "red" },
+    low: { text: "Small shift", tone: "neutral" },
+    none: { text: "Stable", tone: "neutral" },
+  }[severity];
+
+  const storyText =
+    rr == null || wr == null || j == null
+      ? "This borough does not have complete ranking information."
+      : `This borough shifts from #${rr} (raw) to #${wr} (burden).`;
 
   return (
-    <Card
-      style={{
-        padding: 0,
-        border: `1px solid ${palette.accentBorder}`,
-        background: "transparent",
-        position: "relative",
-        overflow: "visible",
-        minHeight: 220,
-      }}
-    >
-      <div
-        style={{
-          borderRadius: 18,
-          overflow: "hidden",
-          background: "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.88))",
-          position: "relative",
-          padding: 18,
-        }}
-      >
+    <Card style={{ padding: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <Label>Rank jump</Label>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <Pill tone={badge.tone}>{badge.text}</Pill>
+          <Pill tone={driver.tone} title={driver.hint}>
+            {driver.label}
+          </Pill>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 12 }}>
         <div
-          aria-hidden
           style={{
-            position: "absolute",
-            inset: -2,
-            background: `radial-gradient(800px 220px at 20% 0%, ${palette.accentSoft}, rgba(255,255,255,0))`,
-            pointerEvents: "none",
-            zIndex: 0,
+            border: `1px solid ${p.accentBorder}`,
+            background: p.accentSoft,
+            borderRadius: 16,
+            padding: 14,
           }}
-        />
+        >
+          <div style={{ fontWeight: 950, color: p.accent, letterSpacing: "-0.2px" }}>{storyText}</div>
+          <div style={{ marginTop: 8, fontSize: 13.2, color: "rgba(15,23,42,0.72)", lineHeight: 1.55 }}>
+            <div style={{ fontWeight: 850, marginBottom: 4 }}>{p.story}</div>
+            <div style={{ color: "rgba(15,23,42,0.60)" }}>{p.meaning}</div>
+          </div>
+        </div>
 
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <div>
-              <Label>Rank jump</Label>
-              <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <div style={{ fontSize: 16, fontWeight: 950, letterSpacing: "-0.3px" }}>{headline}</div>
-
-                <Pill tone={dir === "up" ? "red" : dir === "down" ? "blue" : "neutral"}>
-                  <span style={{ fontSize: 14 }}>{palette.arrow}</span>
-                  <span>{tag}</span>
-                </Pill>
-
-                {absJ >= 6 && dir !== "same" && (
-                  <Pill tone={dir === "up" ? "red" : "blue"} title="Large shifts indicate the city’s ordering changes under different metrics.">
-                    {absJ >= 10 ? "Major shift" : "Notable shift"}
-                  </Pill>
-                )}
-
-                {isBurden && dir !== "unknown" && (
-                  <Pill tone={driver.tone} title={driver.hint}>
-                    {driver.label}
-                  </Pill>
-                )}
-              </div>
+        <div
+          style={{
+            border: "1px solid rgba(15,23,42,0.10)",
+            background: "rgba(255,255,255,0.70)",
+            borderRadius: 16,
+            padding: 14,
+            display: "grid",
+            gap: 10,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(15,23,42,0.45)" }}>
+              Jump
             </div>
-
-            <div
-              className={pulse}
-              style={{
-                minWidth: 78,
-                textAlign: "center",
-                padding: "10px 12px",
-                borderRadius: 16,
-                border: `1px solid ${palette.accentBorder}`,
-                background: "rgba(255,255,255,0.72)",
-                boxShadow: "0 12px 25px rgba(0,0,0,0.08)",
-              }}
-              title="rankJump = rawRank − weightedRank (positive means it looks worse in the burden view)"
-            >
-              <div style={{ fontSize: 11, fontWeight: 900, color: "rgba(15,23,42,0.45)" }}>JUMP</div>
-              <div style={{ fontSize: 26, fontWeight: 950, color: palette.accent, letterSpacing: "-0.6px" }}>
-                {j == null ? "—" : j > 0 ? `+${absJ}` : j < 0 ? `-${absJ}` : "0"}
-              </div>
+            <div style={{ fontSize: 12, fontWeight: 950, color: p.accent }}>
+              {j == null ? "N/A" : `${p.arrow} ${absJ}`}
             </div>
           </div>
 
-          <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div style={{ padding: 14, borderRadius: 16, border: "1px solid rgba(15,23,42,0.10)", background: "rgba(15,23,42,0.04)" }}>
-              <Label style={{ color: "rgba(37,99,235,0.85)" }}>Raw rank</Label>
-              <div style={{ fontSize: 30, fontWeight: 950, letterSpacing: "-0.8px" }}>{rr == null ? "N/A" : `#${rr}`}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ border: "1px solid rgba(15,23,42,0.08)", borderRadius: 14, padding: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 900, color: "rgba(15,23,42,0.45)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Raw rank
+              </div>
+              <div style={{ marginTop: 6, fontWeight: 950, color: "rgba(15,23,42,0.90)" }}>
+                {rr == null ? "N/A" : `#${rr}`}
+              </div>
             </div>
 
-            <div style={{ padding: 14, borderRadius: 16, border: "1px solid rgba(15,23,42,0.10)", background: "rgba(15,23,42,0.04)" }}>
-              <Label style={{ color: "rgba(229,62,62,0.90)" }}>Burden rank</Label>
-              <div style={{ fontSize: 30, fontWeight: 950, letterSpacing: "-0.8px", color: palette.accent }}>
+            <div style={{ border: "1px solid rgba(15,23,42,0.08)", borderRadius: 14, padding: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 900, color: "rgba(15,23,42,0.45)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Burden rank
+              </div>
+              <div style={{ marginTop: 6, fontWeight: 950, color: "rgba(15,23,42,0.90)" }}>
                 {wr == null ? "N/A" : `#${wr}`}
               </div>
             </div>
           </div>
 
-          <div style={{ marginTop: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "rgba(15,23,42,0.45)" }}>
-              <span>Top</span>
-              <span>Bottom</span>
-            </div>
-
-            <div style={{ marginTop: 8, height: 12, borderRadius: 999, background: "rgba(15,23,42,0.06)", position: "relative", overflow: "hidden" }}>
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${Math.min(rawPos, weightedPos) * 100}%`,
-                  width: `${Math.abs(rawPos - weightedPos) * 100}%`,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  height: 4,
-                  borderRadius: 999,
-                  background: palette.accent,
-                  opacity: 0.55,
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${rawPos * 100}%`,
-                  top: "50%",
-                  transform: "translate(-50%, -50%)",
-                  width: 14,
-                  height: 14,
-                  borderRadius: 999,
-                  background: "#2563eb",
-                  border: "2px solid white",
-                  boxShadow: "0 10px 18px rgba(0,0,0,0.18)",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${weightedPos * 100}%`,
-                  top: "50%",
-                  transform: "translate(-50%, -50%)",
-                  width: 14,
-                  height: 14,
-                  borderRadius: 999,
-                  background: palette.accent,
-                  border: "2px solid white",
-                  boxShadow: "0 10px 18px rgba(0,0,0,0.18)",
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginTop: 12, fontSize: 13.5, lineHeight: 1.6, color: "rgba(15,23,42,0.70)" }}>
-            <strong style={{ color: "rgba(15,23,42,0.92)" }}>{palette.story}</strong>
-            <div style={{ marginTop: 6, opacity: 0.95 }}>{palette.meaning}</div>
-
-            {isBurden && dir !== "unknown" && (
-              <div style={{ marginTop: 8, color: "rgba(15,23,42,0.60)" }}>
-                <strong style={{ color: "rgba(15,23,42,0.82)" }}>Why this shift?</strong> {driver.hint}
-              </div>
+          <div style={{ fontSize: 12.2, color: "rgba(15,23,42,0.58)", lineHeight: 1.45 }}>
+            {isBurden ? (
+              <>
+                <strong style={{ color: "rgba(15,23,42,0.78)" }}>Interpretation:</strong> {driver.hint}
+              </>
+            ) : (
+              <>
+                <strong style={{ color: "rgba(15,23,42,0.78)" }}>Tip:</strong> switch to{" "}
+                <strong>The Lived Burden</strong> to reveal re-ranking.
+              </>
             )}
           </div>
-
-          <style>{`
-            @keyframes pulseGlow {
-              0% { box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
-              50% { box-shadow: 0 18px 40px rgba(0,0,0,0.12); }
-              100% { box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
-            }
-            @keyframes pulseGlowStrong {
-              0% { box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
-              50% { box-shadow: 0 22px 52px rgba(0,0,0,0.16); }
-              100% { box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
-            }
-            .pulse { animation: pulseGlow 1.8s ease-in-out infinite; }
-            .pulseStrong { animation: pulseGlowStrong 1.6s ease-in-out infinite; }
-            @media (prefers-reduced-motion: reduce) {
-              .pulse, .pulseStrong { animation: none !important; }
-            }
-          `}</style>
         </div>
       </div>
     </Card>
   );
 }
 
-/* ---------------- Share card ---------------- */
+/* ---------------- ShareComparison module ---------------- */
 
 function ShareComparisonCard({ burdenShare, popShare, burdenRatio, isBurden, rankJump }) {
   const b = safeNum(burdenShare);
   const p = safeNum(popShare);
   const r = safeNum(burdenRatio);
-  const interp = interpretBurden(r);
 
-  const gap = b != null && p != null ? b - p : null;
-  const gapPP = gap == null ? "N/A" : `${gap >= 0 ? "+" : ""}${(gap * 100).toFixed(1)}pp`;
-
-  const scale = 3;
-  const bW = b == null ? 0 : clamp(b * scale, 0, 1);
-  const pW = p == null ? 0 : clamp(p * scale, 0, 1);
-
-  const ratioText = r == null ? "N/A" : r.toFixed(2);
+  const gap = b == null || p == null ? null : b - p;
 
   const absJ = safeNum(rankJump) == null ? null : Math.abs(safeNum(rankJump));
-  const driver = getShiftDriver(r, absJ);
 
-  const modeHint = !isBurden
-    ? "Tip: switch to The Lived Burden to compare exposure share vs population share (and interpret inequity using the ratio)."
-    : driver.label === "Density-driven shift"
-    ? "You’re viewing The Lived Burden: shares are close, so rank shifts are often density/absolute-exposure driven."
-    : driver.label === "Compounded risk"
-    ? "You’re viewing The Lived Burden: re-ranking and disproportionate burden reinforce each other here."
-    : driver.tone === "red"
-    ? "You’re viewing The Lived Burden: the ratio supports an inequality reading (burden share exceeds population share)."
-    : driver.tone === "blue"
-    ? "You’re viewing The Lived Burden: burden share is lower than population share, softening the inequality reading."
-    : "You’re viewing The Lived Burden: shares + ratio help explain what the average view can hide.";
+  const tone = r == null ? "neutral" : r >= 1.05 ? "red" : r <= 0.95 ? "blue" : "neutral";
+
+  const barMax = 0.18; // visual scaling only (values remain accurate)
+  const bW = b == null ? 0 : clamp(b / barMax, 0, 1);
+  const pW = p == null ? 0 : clamp(p / barMax, 0, 1);
+
+  const ratioText = r == null ? "N/A" : `${r.toFixed(2)}×`;
+
+  const headline =
+    !isBurden
+      ? "Exposure vs population"
+      : "Exposure vs population (share comparison)";
+
+  const note =
+    !isBurden
+      ? "Switch to the burden view to compare exposure share with population share."
+      : "Bars are visually scaled for readability (values shown are accurate).";
+
+  const interpretation =
+    r == null
+      ? "No ratio available."
+      : r >= 1.05
+      ? "Interpretation: Exposure share exceeds population share (disproportionate)."
+      : r <= 0.95
+      ? "Interpretation: Exposure share is lower than population share."
+      : "Interpretation: Roughly proportional: exposure share closely matches population share.";
+
+  const shiftLine =
+    isBurden && absJ != null
+      ? absJ >= 6
+        ? "Any rank shift here is likely driven by population concentration and absolute exposure."
+        : "Rank shift is modest; shares help explain whether inequality is present."
+      : null;
 
   return (
-    <Card style={{ padding: 18 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
-        <div>
-          <Label>Exposure vs population</Label>
-          <div style={{ marginTop: 6, fontSize: 18, fontWeight: 950, letterSpacing: "-0.4px" }}>Share comparison</div>
-        </div>
-
-        <Pill tone={interp.tone} style={{ fontSize: 13, padding: "8px 12px" }}>
-          {ratioText}×
-        </Pill>
+    <Card style={{ padding: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <Label>{headline}</Label>
+        <Pill tone={tone}>Share comparison</Pill>
       </div>
 
-      <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 64px", gap: 10, alignItems: "center" }}>
-          <div style={{ fontWeight: 900, color: "rgba(15,23,42,0.82)" }}>Pollution burden share</div>
-          <div style={{ height: 10, borderRadius: 999, background: "rgba(15,23,42,0.06)", overflow: "hidden" }}>
-            <div style={{ width: `${bW * 100}%`, height: "100%", background: "#e53e3e" }} />
-          </div>
-          <div style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: "rgba(15,23,42,0.70)" }}>
-            {pct01(b)}
-          </div>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 64px", gap: 10, alignItems: "center" }}>
-          <div style={{ fontWeight: 900, color: "rgba(15,23,42,0.82)" }}>Population share</div>
-          <div style={{ height: 10, borderRadius: 999, background: "rgba(15,23,42,0.06)", overflow: "hidden" }}>
-            <div style={{ width: `${pW * 100}%`, height: "100%", background: "#2563eb" }} />
-          </div>
-          <div style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: "rgba(15,23,42,0.70)" }}>
-            {pct01(p)}
+      <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+        <div style={{ display: "grid", gap: 8 }}>
+          <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.72)", fontWeight: 850 }}>Pollution burden share</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                height: 10,
+                borderRadius: 999,
+                background: "rgba(229,62,62,0.55)",
+                width: `${bW * 100}%`,
+                minWidth: 10,
+              }}
+            />
+            <div style={{ fontSize: 12.5, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+              {pct01(b, 1)}
+            </div>
           </div>
         </div>
 
-        <Muted style={{ fontSize: 12.8 }}>
-          <strong style={{ color: "rgba(15,23,42,0.88)" }}>Gap:</strong> {gapPP}{" "}
-          <span style={{ opacity: 0.85 }}>(burden share − population share)</span>
-        </Muted>
+        <div style={{ display: "grid", gap: 8 }}>
+          <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.72)", fontWeight: 850 }}>Population share</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                height: 10,
+                borderRadius: 999,
+                background: "rgba(37,99,235,0.55)",
+                width: `${pW * 100}%`,
+                minWidth: 10,
+              }}
+            />
+            <div style={{ fontSize: 12.5, fontWeight: 900, color: "rgba(15,23,42,0.78)" }}>
+              {pct01(p, 2)}
+            </div>
+          </div>
+        </div>
 
-        <Muted style={{ fontSize: 11.5 }}>Bars are visually scaled for readability (values shown are accurate).</Muted>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 4 }}>
+          <Pill tone="neutral">Ratio {ratioText}</Pill>
+          <Pill tone="neutral">
+            Gap: {gap == null ? "N/A" : `${(gap * 100).toFixed(1)}pp`} (burden share − population share)
+          </Pill>
+        </div>
 
-        <div style={{ marginTop: 2, fontSize: 13.5, color: "rgba(15,23,42,0.72)", lineHeight: 1.6 }}>
-          <strong style={{ color: "rgba(15,23,42,0.92)" }}>Interpretation:</strong> {interp.text}
-          <div style={{ marginTop: 6, opacity: 0.9 }}>{interp.note}</div>
-          <div style={{ marginTop: 6, opacity: 0.85 }}>{modeHint}</div>
+        <div style={{ marginTop: 6, fontSize: 12.6, color: "rgba(15,23,42,0.62)", lineHeight: 1.55 }}>
+          {note}
+          <div style={{ marginTop: 6 }}>{interpretation}</div>
+          {shiftLine && <div style={{ marginTop: 6 }}>{shiftLine}</div>}
         </div>
       </div>
     </Card>
   );
 }
 
-/* ---------------- Stat cards ---------------- */
+/* ---------------- StatCard ---------------- */
 
 function StatCard({ label, value, sub, tone = "neutral" }) {
   const palette =
     {
-      neutral: { bg: "rgba(15,23,42,0.04)", border: "rgba(15,23,42,0.10)", accent: "rgba(15,23,42,0.92)" },
-      red: { bg: "rgba(229,62,62,0.08)", border: "rgba(229,62,62,0.18)", accent: "#b91c1c" },
-      blue: { bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.18)", accent: "#1e40af" },
-    }[tone] || { bg: "rgba(15,23,42,0.04)", border: "rgba(15,23,42,0.10)", accent: "rgba(15,23,42,0.92)" };
+      neutral: { border: "rgba(15,23,42,0.10)", bg: "rgba(255,255,255,0.80)", text: "rgba(15,23,42,0.88)" },
+      red: { border: "rgba(229,62,62,0.22)", bg: "rgba(229,62,62,0.08)", text: "#991b1b" },
+      blue: { border: "rgba(37,99,235,0.22)", bg: "rgba(37,99,235,0.08)", text: "#1e40af" },
+    }[tone] || { border: "rgba(15,23,42,0.10)", bg: "rgba(255,255,255,0.80)", text: "rgba(15,23,42,0.88)" };
 
   return (
-    <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${palette.border}`, background: palette.bg }}>
+    <div
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${palette.border}`,
+        background: palette.bg,
+        padding: 14,
+      }}
+    >
       <Label>{label}</Label>
-      <div style={{ marginTop: 8, fontSize: 28, fontWeight: 950, letterSpacing: "-0.8px", color: palette.accent }}>
-        {value}
-      </div>
-      {sub && <Muted style={{ marginTop: 6, fontSize: 12.5, lineHeight: 1.5 }}>{sub}</Muted>}
+      <div style={{ marginTop: 8, fontSize: 18, fontWeight: 950, color: palette.text }}>{value}</div>
+      <div style={{ marginTop: 6, fontSize: 12.2, color: "rgba(15,23,42,0.58)", lineHeight: 1.45 }}>{sub}</div>
     </div>
   );
 }
 
-/* ---------------- Main DetailPanel ---------------- */
+/* ---------------- main component ---------------- */
 
 export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) {
   if (!selectedFeature) return null;
@@ -619,7 +561,6 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
         pillText: "The Lived Burden",
       };
 
-  // ✅ 改 3：仅在 Burden + jump ≥ 5 时出现强提示
   const showJumpMoment = isBurden && rankJump != null && Math.abs(rankJump) >= 5;
 
   return (
@@ -635,7 +576,6 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
         background: "linear-gradient(180deg, rgba(248,250,252,0.98), rgba(255,255,255,0.92))",
       }}
     >
-      {/* header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
         <div>
           <H2>{name}</H2>
@@ -662,7 +602,6 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
         </button>
       </div>
 
-      {/* ✅ 新增：强叙事提示（仅在 Burden + 大跳跃） */}
       {showJumpMoment && (
         <div
           style={{
@@ -682,7 +621,6 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
         </div>
       )}
 
-      {/* narrative */}
       <Card style={{ padding: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <Label>{narrative.title}</Label>
@@ -693,7 +631,6 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
         </div>
       </Card>
 
-      {/* rank jump */}
       <RankJumpCard
         name={name}
         rawRank={rawRank}
@@ -703,7 +640,6 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
         isBurden={isBurden}
       />
 
-      {/* shares */}
       <ShareComparisonCard
         burdenShare={burdenShare}
         popShare={popShare}
@@ -712,7 +648,6 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
         rankJump={rankJump}
       />
 
-      {/* stats */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <StatCard
           label="Burden ratio"
@@ -723,7 +658,6 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
         <StatCard label="Population" value={kFmt(pop)} sub="Approx. residents (k)." tone="neutral" />
       </div>
 
-      {/* interpretive note */}
       <Card style={{ padding: 16 }}>
         <Label>Interpretive note</Label>
         <div style={{ marginTop: 10, fontSize: 13.5, lineHeight: 1.65, color: "rgba(15,23,42,0.72)" }}>
@@ -734,6 +668,11 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
           </div>
         </div>
       </Card>
+
+      {/* ✅ Ethical hint（短句即可，不写 essay） */}
+      <div style={{ fontSize: 12.2, color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+        Averages may obscure lived exposure.
+      </div>
 
       <div style={{ height: 6 }} />
     </div>

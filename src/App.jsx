@@ -489,18 +489,15 @@ export default function App() {
               Average Air, Uneven Burdens
             </h1>
 
-            {/* ✅ 改 1：更强的 opening statement（固定两行） */}
             <div style={{ fontSize: 12, color: "#64748b", marginTop: 2, lineHeight: 1.25 }}>
               London’s air pollution appears average — until we change how we measure it.
               <span style={{ display: "block" }}>Switch viewing modes to see how borough rankings change.</span>
 
-              {/* ✅ 改 2：ethical hint 仅在 weighted 出现 */}
               {mode === "weighted" && <span style={{ display: "block" }}>Averages may obscure lived exposure.</span>}
             </div>
           </div>
         </div>
 
-        {/* ✅ 改 4：toggle 旁边加 “Viewing mode reshapes the city.” */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700 }}>Viewing mode reshapes the city.</div>
 
@@ -516,17 +513,14 @@ export default function App() {
         </div>
       </header>
 
-      {/* ✅ 轻量 explanatory text（模式切换即时解释） */}
       <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "10px 30px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", fontSize: 12.8, color: "#475569" }}>
           <strong style={{ color: "#0f172a" }}>Mode:</strong> {headerExplain}
         </div>
       </div>
 
-      {/* Narrative Intro */}
       <NarrativeIntro mode={mode} onReplayIntro={() => setShowIntro(true)} />
 
-      {/* Toast dramaturgy */}
       {showReorderToast && (
         <div
           style={{
@@ -549,7 +543,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Main */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
         <aside style={{ width: 380, background: "#fff", borderRight: "1px solid #e2e8f0", overflowY: "auto" }}>
           {isLoading ? (
@@ -604,7 +597,6 @@ export default function App() {
         )}
       </div>
 
-      {/* Footer reflection（你原有的，保留） */}
       <footer
         style={{
           padding: "20px 30px",
