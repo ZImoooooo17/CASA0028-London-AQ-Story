@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-// CSV 解析辅助函数
+// --- helpers ---
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   const headers = lines[0].split(",").map((h) => h.trim());
@@ -10,6 +10,11 @@ function parseCSV(text) {
     headers.forEach((h, i) => (row[h] = cols[i]));
     return row;
   });
+}
+
+function num(x, fallback = 0) {
+  const n = Number(x);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 export default function useLondonData() {
@@ -25,29 +30,44 @@ export default function useLondonData() {
           fetch("data/pop_london.csv"),
         ]);
 
-        if (!geoRes.ok) throw new Error(`GeoJSON missing (404). Check: ${geoRes.url}`);
-        if (!no2Res.ok) throw new Error(`NO2 CSV missing (404). Check: ${no2Res.url}`);
-        if (!popRes.ok) throw new Error(`Pop CSV missing (404). Check: ${popRes.url}`);
+        if (!geoRes.ok) throw new Error(`GeoJSON missing. Check path: ${geoRes.url}`);
+        if (!no2Res.ok) throw new Error(`NO2 CSV missing. Check path: ${no2Res.url}`);
+        if (!popRes.ok) throw new Error(`Population CSV missing. Check path: ${popRes.url}`);
 
         const geo = await geoRes.json();
         const no2Rows = parseCSV(await no2Res.text());
         const popRows = parseCSV(await popRes.text());
 
-        const no2Map = new Map(no2Rows.map((r) => [r.LADCD?.trim(), Number(r.NO2)]));
-        const popMap = new Map(popRows.map((r) => [r.LADCD?.trim(), Number(r.Population)]));
+        // ✅ 兼容不同列名
+        // NO2 CSV: LADCD, NO2
+        const no2Map = new Map(
+          no2Rows.map((r) => [
+            (r.LADCD || r.ladcd || r.code || r.GSS_CODE || "").trim(),
+            num(r.NO2 ?? r.no2),
+          ])
+        );
+
+        // Pop CSV: LADCD, Population
+        const popMap = new Map(
+          popRows.map((r) => [
+            (r.LADCD || r.ladcd || r.code || r.GSS_CODE || "").trim(),
+            num(r.Population ?? r.population ?? r.pop),
+          ])
+        );
 
         // 1) join 基础数据
-        let features = geo.features.map((f) => {
-          const code = f.properties.LAD22CD?.trim();
-          const NO2 = Number(no2Map.get(code) || 0);
-          const Population = Number(popMap.get(code) || 0);
+        let features = (geo.features || []).map((f) => {
+          const code = (f.properties?.LAD22CD || f.properties?.LADCD || f.properties?.GSS_CODE || "").trim();
 
-          // 仅用于可视化展示（你原来就有）
-          const totalExposure = (NO2 * Population) / 100000;
+          const NO2 = num(no2Map.get(code), 0);
+          const Population = num(popMap.get(code), 0);
+
+          // ✅ 方案 B：Population Burden = total exposure
+          const totalExposure = NO2 * Population; // 原始量：用于排序/排名
 
           return {
             ...f,
-            id: code,
+            id: code, // 你的 App/Map/Chart 都用 f.id
             properties: {
               ...f.properties,
               LAD22CD: code,
@@ -58,52 +78,56 @@ export default function useLondonData() {
           };
         });
 
-        // 2) 城市总人口 + 总暴露（用于 ratio & shares）
-        const totalPop = features.reduce((sum, f) => sum + (f.properties.Population || 0), 0);
+        // 2) totals
+        const totalPop = features.reduce((sum, f) => sum + num(f.properties.Population, 0), 0);
+        const totalExp = features.reduce((sum, f) => sum + num(f.properties.totalExposure, 0), 0);
 
-        const totalExp = features.reduce(
-          (sum, f) => sum + (f.properties.NO2 * f.properties.Population || 0),
-          0
-        );
+        // exposure index 平均值：Avg = 100%
+        const avgTotalExposure = features.length > 0 ? totalExp / features.length : 0;
 
-        const cityAvgNO2 = totalPop > 0 ? totalExp / totalPop : 0;
-
-        // 3) 写入 burdenRatio + shares
+        // 3) shares + ratio（用于不平等解释，不用于重排）
         features.forEach((f) => {
           const p = f.properties;
 
-          // burdenRatio = NO2 / cityAvgNO2 （= burdenShare/popShare，数学上等价）
-          p.burdenRatio = cityAvgNO2 > 0 ? p.NO2 / cityAvgNO2 : 0;
+          p.popShare = totalPop > 0 ? p.Population / totalPop : 0; // 0~1
+          p.burdenShare = totalExp > 0 ? p.totalExposure / totalExp : 0; // 0~1
 
-          // shares（0~1）
-          p.popShare = totalPop > 0 ? p.Population / totalPop : 0;
-          p.burdenShare = totalExp > 0 ? (p.NO2 * p.Population) / totalExp : 0;
+          // ✅ 不平等解释：burdenShare / popShare
+          p.burdenRatio = p.popShare > 0 ? p.burdenShare / p.popShare : 0;
 
           p.shareGap = p.burdenShare - p.popShare;
+
+          // ✅ 给榜单显示用（Avg=100%）
+          p.exposureIndex = avgTotalExposure > 0 ? (p.totalExposure / avgTotalExposure) * 100 : 0;
         });
 
-        // 4) Raw Rank：按 NO2（高 -> 低）
-        const sortedByRaw = [...features].sort((a, b) => b.properties.NO2 - a.properties.NO2);
+        // 4) Raw Rank：按 NO2（高->低）
+        const sortedByRaw = [...features].sort((a, b) => num(b.properties.NO2) - num(a.properties.NO2));
         sortedByRaw.forEach((f, idx) => {
           f.properties.rawRank = idx + 1;
         });
 
-        // ✅ 5) Weighted Rank：按 burdenRatio（高 -> 低）
-        // 这一步是修复关键：让“Population Burden”排序与图表/地图一致
-        const sortedByWeighted = [...features].sort(
-          (a, b) => b.properties.burdenRatio - a.properties.burdenRatio
-        );
+        // ✅ 5) Weighted (Burden) Rank：按 totalExposure（高->低）——会产生 re-ranking
+        const sortedByWeighted = [...features].sort((a, b) => num(b.properties.totalExposure) - num(a.properties.totalExposure));
 
         sortedByWeighted.forEach((f, idx) => {
           f.properties.weightedRank = idx + 1;
 
-          // rankJump = rawRank - weightedRank（保持你现在 DetailPanel 的解释一致）
-          f.properties.rankJump = (f.properties.rawRank || 0) - (f.properties.weightedRank || 0);
+          // 你 DetailPanel 里 tooltip 写的是：rankJump = rawRank − weightedRank
+          f.properties.rankJump = num(f.properties.rawRank) - num(f.properties.weightedRank);
         });
 
-        setData({ type: "FeatureCollection", features });
+        setData({
+          type: "FeatureCollection",
+          features,
+          meta: {
+            totalPop,
+            totalExp,
+            avgTotalExposure,
+          },
+        });
       } catch (err) {
-        console.error("useLondonData Error:", err.message);
+        console.error("useLondonData Error:", err);
         setError(err);
       }
     }
