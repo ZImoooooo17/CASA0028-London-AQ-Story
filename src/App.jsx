@@ -3,11 +3,11 @@ import MapView from "./components/MapView";
 import BarRankChart from "./components/BarRankChart";
 import DetailPanel from "./components/DetailPanel";
 import ModeToggle from "./components/ModeToggle";
+import Legend from "./components/Legend";
 import useLondonData from "./hooks/useLondonData";
 
 /**
  * Intro Modal - 叙事钩子与视觉引导
- * ✅ 文案合并更新（不删结构）
  */
 function IntroModal({ onStart, onSelectCase }) {
   return (
@@ -44,7 +44,14 @@ function IntroModal({ onStart, onSelectCase }) {
         >
           <div style={{ width: 34, height: 34, background: "#0f172a", borderRadius: 10 }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 950, fontSize: 16, letterSpacing: "-0.4px", color: "#0f172a" }}>
+            <div
+              style={{
+                fontWeight: 950,
+                fontSize: 16,
+                letterSpacing: "-0.4px",
+                color: "#0f172a",
+              }}
+            >
               Average Air, Uneven Burdens
             </div>
             <div style={{ fontSize: 12.5, color: "#475569", marginTop: 2 }}>
@@ -128,8 +135,7 @@ function IntroModal({ onStart, onSelectCase }) {
 }
 
 /**
- * Narrative Intro (你原有的，保留)
- * ✅ 文案合并：统一术语 + 更新 Try 引导句
+ * Narrative Intro
  */
 function NarrativeIntro({ mode, onReplayIntro }) {
   const [openWhy, setOpenWhy] = useState(false);
@@ -184,10 +190,8 @@ function NarrativeIntro({ mode, onReplayIntro }) {
                   lineHeight: 1.55,
                 }}
               >
-                <strong>Average View</strong> is an average concentration. <strong>Burden View</strong> compares a
-                borough’s <em>share of total exposure</em> with its <em>share of population</em>. That’s why the map can
-                “reorder” — the same pollution level can imply very different impacts depending on how many people are
-                exposed.
+                <strong>Average View</strong> is an average concentration. <strong>Burden View</strong> compares a borough’s{" "}
+                <em>share of total exposure</em> with its <em>share of population</em>. That’s why the map can “reorder”.
               </div>
             )}
 
@@ -247,148 +251,7 @@ function NarrativeIntro({ mode, onReplayIntro }) {
 }
 
 /**
- * ✅ 可折叠 Legend（你原有的，保留）
- * ✅ 统一术语（Average View / Burden View）
- */
-function LegendCard({ mode }) {
-  const isRaw = mode === "raw";
-  const [open, setOpen] = useState(true);
-
-  const rawBands = [
-    { label: "< 24", color: "#eff6ff" },
-    { label: "24 – 28", color: "#bfdbfe" },
-    { label: "28 – 32", color: "#60a5fa" },
-    { label: "32 – 36", color: "#2563eb" },
-    { label: "> 36", color: "#1e3a8a" },
-  ];
-
-  const burdenBands = [
-    { label: "< 0.8", color: "#3182ce" },
-    { label: "0.8 – 0.95", color: "#93c5fd" },
-    { label: "0.95 – 1.05", color: "#cbd5e0" },
-    { label: "1.05 – 1.2", color: "#fca5a5" },
-    { label: "> 1.2", color: "#e53e3e" },
-  ];
-
-  const bands = isRaw ? rawBands : burdenBands;
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: 16,
-        bottom: 16,
-        zIndex: 999,
-        width: open ? 380 : 56,
-        background: "rgba(255,255,255,0.94)",
-        border: "1px solid #e2e8f0",
-        borderRadius: 16,
-        padding: open ? 14 : 10,
-        boxShadow: "0 10px 30px rgba(0,0,0,0.10)",
-        backdropFilter: "blur(8px)",
-        transition: "width 200ms ease, padding 200ms ease",
-        overflow: "hidden",
-        pointerEvents: "auto",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div
-          style={{
-            width: 10,
-            height: 10,
-            borderRadius: 999,
-            background: isRaw ? "#2563eb" : "#e53e3e",
-            flexShrink: 0,
-          }}
-        />
-
-        {open && (
-          <div style={{ fontWeight: 900, letterSpacing: "-0.2px", flex: 1 }}>
-            {isRaw ? "Borough-average NO₂ (µg/m³)" : "Population burden (ratio)"}
-          </div>
-        )}
-
-        <button
-          onClick={() => setOpen((v) => !v)}
-          title={open ? "Hide legend" : "Show legend"}
-          aria-label={open ? "Hide legend" : "Show legend"}
-          style={{
-            marginLeft: "auto",
-            border: "1px solid #e2e8f0",
-            background: "white",
-            borderRadius: 10,
-            width: 34,
-            height: 34,
-            cursor: "pointer",
-            fontWeight: 900,
-            fontSize: 18,
-            lineHeight: "32px",
-          }}
-        >
-          {open ? "–" : "?"}
-        </button>
-      </div>
-
-      {open && (
-        <>
-          <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-            {bands.map((it) => (
-              <div
-                key={it.label}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  fontSize: 13,
-                  color: "#334155",
-                }}
-              >
-                <span
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: 6,
-                    background: it.color,
-                    border: "1px solid rgba(0,0,0,0.06)",
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{ fontWeight: 800 }}>{it.label}</span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ marginTop: 12, fontSize: 12.5, color: "#475569", lineHeight: 1.5 }}>
-            {isRaw ? (
-              <>
-                <strong>Average View</strong> shows borough-level mean concentration (µg/m³).
-                <div style={{ marginTop: 6, opacity: 0.9 }}>Higher values = worse average air.</div>
-                <div style={{ marginTop: 6, opacity: 0.9 }}>
-                  Tip: switch to <strong>Burden View</strong> to see where population exposure amplifies risk.
-                </div>
-              </>
-            ) : (
-              <>
-                <strong>Burden View (ratio)</strong> compares a borough’s share of total exposure with its share of
-                London’s population.
-                <div style={{ marginTop: 6, opacity: 0.9 }}>
-                  <strong>1.0</strong> = proportional (burden share matches population share)
-                </div>
-                <div style={{ marginTop: 6, opacity: 0.9 }}>
-                  <strong>&gt; 1.0</strong> = disproportionate exposure • <strong>&lt; 1.0</strong> = lower-than-expected burden
-                </div>
-              </>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-/**
- * ✅ 新增：右上角 Biggest Rank Changes（不影响原逻辑）
- * 使用你已经追加到 App.css 的 .rankChangesCard 样式
+ * ✅ 右上角 Biggest Rank Changes
  */
 function RankChangesCard({ data, onSelect }) {
   const items = useMemo(() => {
@@ -443,38 +306,60 @@ export default function App() {
   const { data, error } = useLondonData();
   const mapRef = useRef(null);
 
-  const flyToFeature = (id) => {
-    const map = mapRef.current?.getMap?.();
-    const feature = data?.features?.find((f) => f.id === id);
-    if (!map || !feature) return;
+  // ✅ 兼容 id / LAD22CD
+  const findFeatureById = (id) => {
+    if (!id || !data?.features?.length) return null;
+    const sid = String(id);
+    return (
+      data.features.find((f) => String(f?.id) === sid) ||
+      data.features.find((f) => String(f?.properties?.LAD22CD) === sid) ||
+      null
+    );
+  };
 
-    const scan = (coords) => {
-      let minLng = Infinity,
-        minLat = Infinity,
-        maxLng = -Infinity,
-        maxLat = -Infinity;
+  // ✅ 更稳的 bounds 扫描（兼容 MultiPolygon）
+  const scanBounds = (coords) => {
+    let minLng = Infinity,
+      minLat = Infinity,
+      maxLng = -Infinity,
+      maxLat = -Infinity;
 
-      const inner = (c) => {
-        if (typeof c[0] === "number") {
-          minLng = Math.min(minLng, c[0]);
-          minLat = Math.min(minLat, c[1]);
-          maxLng = Math.max(maxLng, c[0]);
-          maxLat = Math.max(maxLat, c[1]);
-        } else {
-          c.forEach(inner);
-        }
-      };
-
-      inner(coords);
-      return [
-        [minLng, minLat],
-        [maxLng, maxLat],
-      ];
+    const walk = (c) => {
+      if (Array.isArray(c) && typeof c[0] === "number" && typeof c[1] === "number") {
+        minLng = Math.min(minLng, c[0]);
+        minLat = Math.min(minLat, c[1]);
+        maxLng = Math.max(maxLng, c[0]);
+        maxLat = Math.max(maxLat, c[1]);
+      } else if (Array.isArray(c)) {
+        c.forEach(walk);
+      }
     };
 
-    map.fitBounds(scan(feature.geometry.coordinates), {
-      padding: { right: 480, top: 50, bottom: 50, left: 50 },
-      duration: 1200,
+    walk(coords);
+    return [
+      [minLng, minLat],
+      [maxLng, maxLat],
+    ];
+  };
+
+  const flyToFeature = (id) => {
+    const map = mapRef.current?.getMap?.();
+    const feature = findFeatureById(id);
+    if (!map || !feature) return;
+
+    const hasRightPanel = Boolean(id);
+    const padding = hasRightPanel
+      ? { right: 480, top: 50, bottom: 50, left: 50 }
+      : { right: 50, top: 50, bottom: 50, left: 50 };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        map.resize();
+        map.fitBounds(scanBounds(feature.geometry.coordinates), {
+          padding,
+          duration: 1200,
+        });
+      });
     });
   };
 
@@ -522,8 +407,10 @@ export default function App() {
       ? "Average View shows borough mean NO₂. But every average hides as much as it reveals."
       : "Burden View uses a population-weighted burden ratio (exposure share vs population share). Rankings can shift — revealing disproportionate exposure.";
 
+  const selectedFeature = selectedId ? findFeatureById(selectedId) : null;
+
   return (
-    <div style={{ display: "flex", height: "100vh", flexDirection: "column", background: "#f8f9fa" }}>
+    <div className="storyPage">
       {showIntro && <IntroModal onStart={() => setShowIntro(false)} onSelectCase={handleCaseSelect} />}
 
       {/* Header */}
@@ -599,8 +486,16 @@ export default function App() {
         </div>
       )}
 
-      <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
-        <aside style={{ width: 380, background: "#fff", borderRight: "1px solid #e2e8f0", overflowY: "auto" }}>
+      {/* ✅ 三栏防重叠版（解决图4盖住地图） */}
+      <section className="interactiveSection"><div className="interactiveShell">
+        <aside
+          style={{
+            flex: "0 0 380px",
+            background: "#fff",
+            borderRight: "1px solid #e2e8f0",
+            overflowY: "auto",
+          }}
+        >
           {isLoading ? (
             <div style={{ padding: 18, color: "#64748b" }}>Loading charts…</div>
           ) : (
@@ -614,12 +509,11 @@ export default function App() {
           )}
         </aside>
 
-        <main style={{ flex: 1, position: "relative" }}>
+        <main style={{ flex: "1 1 auto", position: "relative", minWidth: 0 }}>
           {isLoading ? (
             <div style={{ padding: 18, color: "#64748b" }}>Loading map…</div>
           ) : (
             <>
-              {/* ✅ New proactive narrative element */}
               <RankChangesCard data={data} onSelect={handleSelect} />
 
               <MapView
@@ -632,29 +526,29 @@ export default function App() {
                 onHoveredId={setHoveredId}
                 spotlightId={spotlightId}
               />
-              <LegendCard mode={mode} />
+
+              {/* ✅ 图1/图2：Legend 放在地图里，可折叠，默认收起 */}
+              <Legend mode={mode} defaultOpen={false} anchor="top-left" />
             </>
           )}
         </main>
 
-        {selectedId && data && (
-          <aside
-            style={{
-              width: 420,
-              background: "#fff",
-              borderLeft: "1px solid #e2e8f0",
-              zIndex: 10,
-              overflowY: "auto",
-            }}
-          >
-            <DetailPanel
-              selectedFeature={data.features.find((f) => f.id === selectedId)}
-              mode={mode}
-              onClose={() => setSelectedId(null)}
-            />
-          </aside>
-        )}
-      </div>
+        <aside
+          style={{
+            flex: "0 0 420px",
+            background: "#fff",
+            borderLeft: "1px solid #e2e8f0",
+            zIndex: 10,
+            overflowY: "auto",
+          }}
+        >
+          {selectedFeature ? (
+            <DetailPanel selectedFeature={selectedFeature} mode={mode} onClose={() => setSelectedId(null)} />
+          ) : (
+            <div style={{ padding: 18, color: "#64748b" }}>Click a borough to open a profile.</div>
+          )}
+        </aside>
+      </div></section>
 
       <footer
         style={{
@@ -672,28 +566,23 @@ export default function App() {
             <strong style={{ color: "#1a202c", display: "block", marginBottom: 4 }}>
               Representation is never neutral:
             </strong>
-            The same pollution measurements can tell very different stories depending on how they are weighted. By
-            giving more voice to where people actually live, some inequalities that averages conceal become harder to
-            ignore.
+            The same pollution measurements can tell very different stories depending on how they are weighted. By giving more voice to
+            where people actually live, some inequalities that averages conceal become harder to ignore.
             <div style={{ marginTop: 10, color: "#475569" }}>
-              This interface does not declare what is fair. It shows how measurement choices quietly redraw who is seen
-              and who is overlooked.
+              This interface does not declare what is fair. It shows how measurement choices quietly redraw who is seen and who is overlooked.
             </div>
           </div>
 
           <div style={{ flex: 1 }}>
             <strong style={{ color: "#1a202c", display: "block", marginBottom: 4 }}>Target Users & Agency:</strong>
-            Intended for London residents, campaigners, and local decision-makers, the platform positions users not as
-            passive viewers but as active interpreters—supporting comparison, discussion, and advocacy around spatial
-            inequality.
+            Intended for London residents, campaigners, and local decision-makers, the platform positions users not as passive viewers but as
+            active interpreters—supporting comparison, discussion, and advocacy around spatial inequality.
           </div>
         </div>
       </footer>
     </div>
   );
 }
-
-
 
 
 
