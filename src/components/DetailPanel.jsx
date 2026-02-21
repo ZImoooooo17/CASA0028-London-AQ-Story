@@ -323,7 +323,16 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
             padding: 14,
           }}
         >
-          <div style={{ fontWeight: 950, color: p.accent, letterSpacing: "-0.2px" }}>{storyText}</div>
+          <div style={{ fontWeight: 950, color: p.accent, letterSpacing: "-0.2px" }}>
+            {storyText}
+          </div>
+          {/* ✅ ② RankJumpCard Narrative Amplification */}
+          {isBurden && absJ >= 5 && (
+            <div style={{ marginTop: 6, fontStyle: "italic", color: "rgba(15,23,42,0.65)" }}>
+              This borough becomes more visible when population exposure is considered.
+            </div>
+          )}
+          
           <div style={{ marginTop: 8, fontSize: 13.2, color: "rgba(15,23,42,0.72)", lineHeight: 1.55 }}>
             <div style={{ fontWeight: 850, marginBottom: 4 }}>{p.story}</div>
             <div style={{ color: "rgba(15,23,42,0.60)" }}>{p.meaning}</div>
@@ -486,6 +495,13 @@ function ShareComparisonCard({ burdenShare, popShare, burdenRatio, isBurden, ran
         <div style={{ marginTop: 6, fontSize: 12.6, color: "rgba(15,23,42,0.62)", lineHeight: 1.55 }}>
           {note}
           <div style={{ marginTop: 6 }}>{interpretation}</div>
+          {/* ✅ ③ ShareComparisonCard Inequality Framing */}
+          {isBurden && r != null && Math.abs(r - 1) >= 0.05 && (
+            <div style={{ marginTop: 6, fontStyle: "italic", color: "rgba(15,23,42,0.60)" }}>
+              Inequality is not a matter of absolute pollution alone, but of how exposure is distributed across residents.
+            </div>
+          )}
+          
           {shiftLine && <div style={{ marginTop: 6 }}>{shiftLine}</div>}
         </div>
       </div>
@@ -626,8 +642,14 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
           <Label>{narrative.title}</Label>
           <Pill tone={narrative.pillTone}>{narrative.pillText}</Pill>
         </div>
+        {/* ✅ ① Narrative Card Epistemic Position Enhancement */}
         <div style={{ marginTop: 10, fontSize: 14, lineHeight: 1.65, color: "rgba(15,23,42,0.72)" }}>
           {narrative.body}
+          {isBurden && (
+            <div style={{ marginTop: 8, fontStyle: "italic", color: "rgba(15,23,42,0.65)" }}>
+              Changing the viewing mode does not just change colour — it reshapes the hierarchy of concern.
+            </div>
+          )}
         </div>
       </Card>
 
@@ -669,7 +691,6 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
         </div>
       </Card>
 
-      {/* ✅ Ethical hint（短句即可，不写 essay） */}
       <div style={{ fontSize: 12.2, color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
         This interface does not declare what is fair. It shows how measurement choices quietly redraw who is seen and who is overlooked.
       </div>

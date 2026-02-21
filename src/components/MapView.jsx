@@ -1,11 +1,48 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Map, { Source, Layer } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
+
+/* ===========================
+   🔹 手写 bbox 计算函数
+=========================== */
+function getFeatureBounds(feature) {
+  if (!feature?.geometry?.coordinates) return null;
+
+  let coords = [];
+
+  const collectCoords = (arr) => {
+    if (typeof arr[0] === "number") {
+      coords.push(arr);
+    } else {
+      arr.forEach(collectCoords);
+    }
+  };
+
+  collectCoords(feature.geometry.coordinates);
+
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+
+  coords.forEach(([x, y]) => {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  });
+
+  return [
+    [minX, minY],
+    [maxX, maxY],
+  ];
+}
 
 function formatNum(x, digits = 2) {
   const n = Number(x);
   return Number.isFinite(n) ? n.toFixed(digits) : "N/A";
 }
+
 function formatPct01(x, digits = 1) {
   const n = Number(x);
   return Number.isFinite(n) ? `${(n * 100).toFixed(digits)}%` : "N/A";
@@ -24,81 +61,144 @@ export default function MapView({
   const [hoverPopup, setHoverPopup] = useState(null);
   const [labelLayerId, setLabelLayerId] = useState(null);
 
-  // ✅ 图3：Color meaning 默认收起
-  const [meaningOpen, setMeaningOpen] = useState(false);
+  /* ===========================
+     🎯 自动聚焦逻辑
+  =========================== */
+  useEffect(() => {
+    if (!selectedId || !mapRef?.current || !data) return;
 
+    const map = mapRef.current.getMap();
+
+    const feature = data.features.find(
+      (f) => f.properties?.LAD22CD === selectedId
+    );
+
+    if (!feature) return;
+
+    const bounds = getFeatureBounds(feature);
+    if (!bounds) return;
+
+    map.resize();
+
+    map.fitBounds(bounds, {
+      padding: 60,
+      duration: 900,
+      maxZoom: 12,
+    });
+  }, [selectedId, data, mapRef]);
+
+  /* ===========================
+     🎨 强化对立色阶
+  =========================== */
   const fillColorExpr = useMemo(() => {
-    const missing = "#f3f4f6";
+    const missing = "#f1f5f9";
+
+    // ===========================
+    // RAW = 冷理性蓝（技术感）
+    // ===========================
     if (mode === "raw") {
       return [
         "step",
         ["coalesce", ["get", "NO2"], -1],
         missing,
+
         0,
-        "#eff6ff",
+        "#f8fafc",   // 几乎白蓝
+
         24,
-        "#bfdbfe",
+        "#dbeafe",
+
         28,
-        "#60a5fa",
+        "#93c5fd",
+
         32,
-        "#2563eb",
+        "#3b82f6",
+
         36,
-        "#1e3a8a",
+        "#1d4ed8",
+
+        40,
+        "#0f172a",   // 深冷蓝（接近黑蓝）
       ];
     }
+
+    // ===========================
+    // BURDEN = 冷灰 → 红 → 深红
+    // ===========================
     return [
       "step",
       ["coalesce", ["get", "burdenRatio"], -1],
       missing,
+
       0,
-      "#3182ce",
-      0.8,
-      "#93c5fd",
+      "#e2e8f0",   // 冷灰（低负担）
+
+      0.85,
+      "#fecaca",
+
       0.95,
-      "#cbd5e0",
-      1.05,
       "#fca5a5",
+
+      1.05,
+      "#ef4444",
+
       1.2,
-      "#e53e3e",
+      "#b91c1c",
+
+      1.4,
+      "#7f1d1d",
     ];
   }, [mode]);
 
   const onMapLoad = (e) => {
     const layers = e.target.getStyle().layers;
-    const labelLayer = layers.find((l) => l.type === "symbol" && l.layout?.["text-field"]);
+    const labelLayer = layers.find(
+      (l) => l.type === "symbol" && l.layout?.["text-field"]
+    );
     if (labelLayer) setLabelLayerId(labelLayer.id);
   };
 
+  /* ===========================
+     Tooltip
+  =========================== */
   const tooltip = useMemo(() => {
     if (!hoverPopup?.props) return null;
     const p = hoverPopup.props;
     const name = p.LAD22NM || "Borough";
 
     if (mode === "raw") {
-      return { title: name, lines: [`NO₂: ${formatNum(p.NO2, 1)} µg/m³`] };
+      return {
+        title: name,
+        lines: [
+          `NO₂: ${formatNum(p.NO2, 1)} µg/m³`,
+          "Click to compare ranking under both views.",
+        ],
+      };
     }
-
-    const ratio = p.burdenRatio;
-    const burdenShare = p.burdenShare;
-    const popShare = p.populationShare ?? p.popShare;
 
     return {
       title: name,
       lines: [
-        `Burden ratio (color): ${formatNum(ratio, 2)}×`,
-        `Burden share: ${formatPct01(burdenShare, 1)}`,
-        `Population share: ${formatPct01(popShare, 2)}`,
+        `Burden ratio (color): ${formatNum(p.burdenRatio, 2)}×`,
+        `Burden share: ${formatPct01(p.burdenShare, 1)}`,
+        `Population share: ${formatPct01(
+          p.populationShare ?? p.popShare,
+          2
+        )}`,
+        "Click to compare ranking under both views.",
       ],
     };
   }, [hoverPopup, mode]);
-
-  const showMeaning = mode !== "raw";
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
       <Map
         ref={mapRef}
-        initialViewState={{ longitude: -0.12, latitude: 51.5, zoom: 9.5 }}
+        initialViewState={{
+          longitude: -0.12,
+          latitude: 51.5,
+          zoom: 9.5,
+        }}
         mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
         onLoad={onMapLoad}
         interactiveLayerIds={["borough-fill"]}
@@ -111,7 +211,11 @@ export default function MapView({
           }
           const hid = f.properties?.LAD22CD ?? f.id ?? null;
           onHoveredId?.(hid);
-          setHoverPopup({ x: e.point?.x, y: e.point?.y, props: f.properties });
+          setHoverPopup({
+            x: e.point?.x,
+            y: e.point?.y,
+            props: f.properties,
+          });
         }}
         onMouseLeave={() => {
           onHoveredId?.(null);
@@ -124,137 +228,76 @@ export default function MapView({
         }}
       >
         {data && (
-          <Source id="boroughs" type="geojson" data={data} promoteId="LAD22CD">
+          <Source
+            id="boroughs"
+            type="geojson"
+            data={data}
+            promoteId="LAD22CD"
+          >
             <Layer
               id="borough-fill"
               type="fill"
               beforeId={labelLayerId}
-              paint={{ "fill-color": fillColorExpr, "fill-opacity": 0.85 }}
+              paint={{
+                "fill-color": fillColorExpr,
+                "fill-opacity": 0.9,
+              }}
             />
+
             <Layer
               id="borough-spotlight-outline"
               type="line"
               beforeId={labelLayerId}
               filter={["==", ["get", "LAD22CD"], spotlightId || ""]}
-              paint={{ "line-color": "#111827", "line-width": 2.5, "line-opacity": 0.85 }}
+              paint={{
+                "line-color": "#111827",
+                "line-width": 2.5,
+                "line-opacity": 0.85,
+              }}
             />
+
             <Layer
               id="borough-hover-outline"
               type="line"
               beforeId={labelLayerId}
               filter={["==", ["get", "LAD22CD"], hoveredId || ""]}
-              paint={{ "line-color": "#f59e0b", "line-width": 3 }}
+              paint={{
+                "line-color": "#f59e0b",
+                "line-width": 3,
+              }}
             />
+
             <Layer
               id="borough-select-outline"
               type="line"
               filter={["==", ["get", "LAD22CD"], selectedId || ""]}
-              paint={{ "line-color": "#1a202c", "line-width": 3 }}
+              paint={{
+                "line-color": "#111827",
+                "line-width": 3,
+              }}
             />
           </Source>
         )}
       </Map>
 
-      {/* ✅ 图3：Color meaning 可折叠 */}
-      {showMeaning && (
-        <div style={{ position: "absolute", right: 12, bottom: 12, zIndex: 120, pointerEvents: "auto" }}>
-          {!meaningOpen ? (
-            <button
-              type="button"
-              onClick={() => setMeaningOpen(true)}
-              aria-label="Show color meaning"
-              title="Show color meaning"
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                border: "1px solid #e2e8f0",
-                background: "rgba(255,255,255,0.92)",
-                boxShadow: "0 10px 24px rgba(0,0,0,0.10)",
-                cursor: "pointer",
-                fontWeight: 900,
-                color: "#0f172a",
-                backdropFilter: "blur(8px)",
-              }}
-            >
-              i
-            </button>
-          ) : (
-            <div
-              style={{
-                width: 300,
-                background: "rgba(255,255,255,0.92)",
-                border: "1px solid #e2e8f0",
-                borderRadius: 16,
-                padding: "10px 12px",
-                boxShadow: "0 10px 24px rgba(0,0,0,0.10)",
-                backdropFilter: "blur(8px)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: "#64748b",
-                    flex: 1,
-                  }}
-                >
-                  Color meaning
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setMeaningOpen(false)}
-                  aria-label="Hide color meaning"
-                  title="Hide"
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 10,
-                    border: "1px solid #e2e8f0",
-                    background: "white",
-                    cursor: "pointer",
-                    fontWeight: 900,
-                    color: "#0f172a",
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-
-              <div style={{ marginTop: 6, fontSize: 12.5, color: "#334155", lineHeight: 1.35 }}>
-                Map color encodes <strong>burden ratio</strong> = <strong>burden share</strong> ÷{" "}
-                <strong>population share</strong>.
-                <div style={{ marginTop: 6, color: "#475569" }}>
-                  A borough can be red even if its burden share is small, if its population share is even smaller.
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Tooltip（永远不挡拖动） */}
+      {/* Tooltip */}
       {tooltip && hoverPopup?.x != null && hoverPopup?.y != null && (
         <div
           style={{
             position: "absolute",
             left: hoverPopup.x + 12,
             top: hoverPopup.y + 12,
-            zIndex: 140,
             pointerEvents: "none",
-            background: "rgba(255,255,255,0.95)",
+            background: "rgba(255,255,255,0.96)",
             border: "1px solid #e2e8f0",
             borderRadius: 14,
             padding: "10px 12px",
-            boxShadow: "0 10px 24px rgba(0,0,0,0.12)",
             maxWidth: 260,
+            boxShadow: "0 10px 24px rgba(0,0,0,0.12)",
           }}
         >
-          <div style={{ fontWeight: 900, marginBottom: 6, color: "#111827" }}>{tooltip.title}</div>
-          <div style={{ fontSize: 12.5, color: "#334155", lineHeight: 1.35 }}>
+          <div style={{ fontWeight: 900 }}>{tooltip.title}</div>
+          <div style={{ fontSize: 12.5, lineHeight: 1.4 }}>
             {tooltip.lines.map((t, i) => (
               <div key={i}>{t}</div>
             ))}

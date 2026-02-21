@@ -89,6 +89,10 @@ function IntroModal({ onStart, onSelectCase }) {
             <div style={{ marginTop: 8 }}>
               Switch between them and notice what changes — and what quietly fades from sight.
             </div>
+            {/* ✅ ② IntroModal 插入 */}
+            <div style={{ marginTop: 10, fontWeight: 700, color: "#0f172a" }}>
+              Changing the viewing mode does not just change colour — it reshapes the city.
+            </div>
           </div>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -438,6 +442,10 @@ export default function App() {
               London’s air quality is routinely reported as an average.
               <span style={{ display: "block" }}>Switch views to see what changes — and what quietly fades from sight.</span>
             </div>
+            {/* ✅ ① Header 处插入 */}
+            <div style={{ fontSize: 12.5, color: "#334155", marginTop: 4, fontWeight: 600 }}>
+              When we talk about London’s “average” air quality, what inequalities disappear?
+            </div>
           </div>
         </div>
 
@@ -486,7 +494,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ✅ 三栏防重叠版（解决图4盖住地图） */}
+      {/* ✅ 三栏防重叠版 */}
       <section className="interactiveSection"><div className="interactiveShell">
         <aside
           style={{
@@ -527,7 +535,6 @@ export default function App() {
                 spotlightId={spotlightId}
               />
 
-              {/* ✅ 图1/图2：Legend 放在地图里，可折叠，默认收起 */}
               <Legend mode={mode} defaultOpen={false} anchor="top-left" />
             </>
           )}
@@ -570,6 +577,11 @@ export default function App() {
             where people actually live, some inequalities that averages conceal become harder to ignore.
             <div style={{ marginTop: 10, color: "#475569" }}>
               This interface does not declare what is fair. It shows how measurement choices quietly redraw who is seen and who is overlooked.
+            </div>
+            {/* ✅ ③ Footer 插入 */}
+            <div style={{ marginTop: 12 }}>
+              Data reflects modeled annual mean NO₂ concentrations and population estimates.
+              Rankings illustrate interpretative differences rather than definitive measures of harm.
             </div>
           </div>
 

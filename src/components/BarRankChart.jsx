@@ -18,13 +18,11 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
     if (!data?.features?.length) return [];
 
     if (mode === "weighted") {
-      // ✅ weighted：排序依据 totalExposure（NO₂ × population）
-      // 显示 Exposure Index（Avg = 100%） + burdenShare（share %）避免误解
       return [...data.features]
         .sort((a, b) => num(b.properties?.totalExposure) - num(a.properties?.totalExposure))
         .map((f) => {
-          const idx = num(f.properties?.exposureIndex); // Avg=100
-          const bShare = f.properties?.burdenShare; // 0~1
+          const idx = num(f.properties?.exposureIndex);
+          const bShare = f.properties?.burdenShare;
           const shareText = fmtPct01(bShare, 1);
 
           return {
@@ -32,13 +30,12 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
             name: f.properties?.LAD22NM || "Borough",
             displayPrimary: `${idx.toFixed(0)}%`,
             displaySecondary: shareText ? `${shareText} share` : null,
-            barWidthPct: `${Math.min(idx / 2, 100)}%`, // 200% -> 100%宽；100% -> 50%宽
+            barWidthPct: `${Math.min(idx / 2, 100)}%`,
             isHigh: idx >= 120,
           };
         });
     }
 
-    // raw：按 NO2 排
     return [...data.features]
       .sort((a, b) => num(b.properties?.NO2) - num(a.properties?.NO2))
       .map((f) => {
@@ -90,44 +87,12 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
         >
           {title}
         </h3>
-        <div style={{ marginTop: 6, fontSize: 11.5, color: "#94a3b8", lineHeight: 1.35 }}>{subtitle}</div>
-
-        {mode === "weighted" && (
-          <div style={{ marginTop: 6, fontSize: 11.5, color: "#94a3b8", lineHeight: 1.35 }}>
-            Map color shows <strong>burden ratio</strong> (burden share ÷ population share), not the share itself.
-          </div>
-        )}
+        <div style={{ marginTop: 6, fontSize: 11.5, color: "#94a3b8", lineHeight: 1.35 }}>
+          {subtitle}
+        </div>
       </div>
 
       <div style={{ flex: 1, position: "relative", paddingTop: 10 }}>
-        {mode === "weighted" && (
-          <div
-            style={{
-              position: "absolute",
-              left: "50%",
-              top: 10,
-              bottom: 0,
-              width: 1,
-              borderLeft: "1px dashed #cbd5e0",
-              zIndex: 0,
-              pointerEvents: "none",
-            }}
-          >
-            <span
-              style={{
-                position: "absolute",
-                top: -14,
-                left: -22,
-                fontSize: 9,
-                color: "#94a3b8",
-                fontWeight: 900,
-              }}
-            >
-              AVG (100%)
-            </span>
-          </div>
-        )}
-
         <div style={{ position: "relative", zIndex: 1 }}>
           {list.map((item) => {
             const isSelected = item.id === selectedId;
@@ -140,25 +105,44 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
                 onMouseEnter={() => onHover?.(item.id)}
                 onMouseLeave={() => onHover?.(null)}
                 style={{
-                  padding: "8px 10px",
-                  marginBottom: 4,
+                  position: "relative",
+                  padding: "10px 12px",
+                  marginBottom: 6,
                   cursor: "pointer",
-                  borderRadius: 8,
-                  background: isSelected ? "#f0f7ff" : "transparent",
-                  border: isSelected ? "1px solid #007bff" : "1px solid transparent",
-                  transition: "all 0.2s",
+                  borderRadius: 10,
+                  background: isSelected ? "rgba(30,64,175,0.08)" : "transparent",
+                  border: isSelected ? "1px solid rgba(30,64,175,0.25)" : "1px solid transparent",
+                  boxShadow: isSelected ? "0 6px 18px rgba(30,64,175,0.12)" : "none",
+                  transform: isSelected ? "scale(1.01)" : "scale(1)",
+                  transition: "all 0.35s ease",
                 }}
               >
+                {/* 左侧 accent 条 */}
+                {isSelected && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 6,
+                      bottom: 6,
+                      width: 4,
+                      borderRadius: 4,
+                      background: "#1e40af",
+                    }}
+                  />
+                )}
+
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, gap: 10 }}>
                   <span
                     style={{
                       fontSize: 13,
-                      fontWeight: isSelected ? 700 : 500,
-                      color: isSelected ? "#007bff" : "#333",
+                      fontWeight: isSelected ? 800 : 500,
+                      color: isSelected ? "#1e40af" : "#334155",
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       maxWidth: 220,
+                      transition: "color 0.3s ease",
                     }}
                   >
                     {item.name}
@@ -167,7 +151,7 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
                   <span
                     style={{
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 900,
                       color: item.isHigh ? "#ef4444" : "#64748b",
                       textAlign: "right",
                       whiteSpace: "nowrap",
@@ -179,13 +163,24 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
                   </span>
                 </div>
 
-                <div style={{ height: 4, background: "#f1f5f9", borderRadius: 2, overflow: "hidden" }}>
+                <div
+                  style={{
+                    height: 5,
+                    background: "#f1f5f9",
+                    borderRadius: 3,
+                    overflow: "hidden",
+                  }}
+                >
                   <div
                     style={{
                       height: "100%",
                       width: item.barWidthPct,
-                      background: isSelected ? "#007bff" : item.isHigh ? "#ef4444" : "#94a3b8",
-                      transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                      background: isSelected
+                        ? "#1e40af"
+                        : item.isHigh
+                        ? "#ef4444"
+                        : "#94a3b8",
+                      transition: "width 0.45s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease",
                     }}
                   />
                 </div>
@@ -195,24 +190,36 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
         </div>
       </div>
 
-      <div style={{ marginTop: 14, padding: 14, borderTop: "1px solid #eee", background: "#fdfdfd", borderRadius: 8 }}>
-        <div style={{ fontSize: 10, fontWeight: 900, color: "#64748b", marginBottom: 6, textTransform: "uppercase" }}>
+      <div
+        style={{
+          marginTop: 14,
+          padding: 14,
+          borderTop: "1px solid #eee",
+          background: "#fdfdfd",
+          borderRadius: 8,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 900,
+            color: "#64748b",
+            marginBottom: 6,
+            textTransform: "uppercase",
+          }}
+        >
           Methodology & Data
         </div>
 
         {mode === "weighted" ? (
           <p style={{ fontSize: 10.5, color: "#94a3b8", lineHeight: 1.5, margin: 0 }}>
-            <strong>Total Exposure</strong> ranks boroughs by <strong>NO₂ × population</strong>.
-            <br />
-            Values shown as <strong>Exposure Index</strong> where <strong>Avg = 100%</strong>.
-            <br />
-            <strong>Share</strong> is each borough’s fraction of total exposure (not what map color encodes).
-            <br />
-            Map color encodes <strong>burden ratio</strong> = burden share ÷ population share.
+            Total Exposure ranks boroughs by NO₂ × population.
+            Exposure Index uses Avg = 100%.
+            Map color encodes burden ratio (burden share ÷ population share).
           </p>
         ) : (
           <p style={{ fontSize: 10.5, color: "#94a3b8", lineHeight: 1.5, margin: 0 }}>
-            <strong>Raw NO₂</strong> ranks boroughs by borough-average concentration (µg/m³).
+            Raw NO₂ ranks boroughs by borough-average concentration (µg/m³).
           </p>
         )}
       </div>
