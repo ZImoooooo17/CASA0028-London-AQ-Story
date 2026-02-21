@@ -1,30 +1,30 @@
-/* ===== 基础布局与结构 ===== */
+/* ===== 基础布局 ===== */
+
 .storyPage {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden; /* 防止整页滚动，将滚动权交给侧边栏 */
+  min-height: 100vh;   /* 允许页面自然变长 */
   background: #f8fafc;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* ===== 核心交互区 ===== */
+/* ===== 交互主舞台 ===== */
+/* 这个区域是视觉“舞台”，固定高度 */
+
 .interactiveSection {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0; 
 }
 
-/* 三栏容器：关键是 overflow: visible 确保浮层显示 */
+/* 三栏容器 */
 .interactiveShell {
-  flex: 1;
   display: flex;
-  min-height: 0;
-  overflow: visible; 
+  height: 70vh;       /* ⭐ 关键：给地图明确高度 */
+  min-height: 520px;  /* 防止屏幕太小塌陷 */
 }
 
-/* 左侧列表面板 */
+/* ===== 左侧列表 ===== */
+
 .interactiveShell > aside:first-child {
   flex: 0 0 380px;
   background: #ffffff;
@@ -32,51 +32,62 @@
   overflow-y: auto;
 }
 
-/* 中间地图主区 */
+/* ===== 中间地图 ===== */
+
 .interactiveShell > main {
   flex: 1 1 auto;
   position: relative;
   min-width: 0;
-  overflow: visible; /* 🎯 确保 Legend 不被父级容器裁切 */
+  overflow: hidden;
 }
 
-/* 确保地图 Canvas 撑满 */
+/* 让 Map 容器真正撑满 */
 .interactiveShell > main > div {
+  width: 100%;
   height: 100%;
 }
 
-/* 右侧详情面板 */
+/* ===== 右侧详情 ===== */
+
 .interactiveShell > aside:last-child {
-  /* 宽度在 JSX 中通过 style 动态控制 (0 -> 420px) */
   background: #ffffff;
   overflow-y: auto;
 }
 
-/* ===== MapLibre 引擎修复：确保图层溢出可见 ===== */
+/* ===== MapLibre 修复 ===== */
+
 .maplibregl-map {
-  overflow: visible !important;
+  width: 100%;
+  height: 100%;
 }
 
 .maplibregl-canvas-container {
-  overflow: visible !important;
+  width: 100%;
+  height: 100%;
 }
 
-/* ===== 滚动条美化 ===== */
+/* ===== 页眉页脚 ===== */
+
+header,
+footer {
+  flex-shrink: 0;
+}
+
+/* ===== 滚动条优化 ===== */
+
 aside::-webkit-scrollbar {
   width: 5px;
 }
+
 aside::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
+
 aside::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 10px;
 }
+
 aside::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
-}
-
-/* ===== 脚注与页眉限制弹性 ===== */
-header, footer {
-  flex-shrink: 0;
 }
