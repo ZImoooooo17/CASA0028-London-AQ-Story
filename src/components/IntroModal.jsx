@@ -1,145 +1,148 @@
-export default function IntroModal({ open, onClose }) {
-  if (!open) return null;
-
+export default function IntroModal({ onStart, onSelectCase, data }) {
   return (
-    <div style={backdrop} onMouseDown={onClose}>
-      <div style={panel} onMouseDown={(e) => e.stopPropagation()}>
-        
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(0,0,0,0.88)",
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+      }}
+    >
+      <div
+        style={{
+          width: "min(1000px, 95%)",
+          borderRadius: 24,
+          background: "rgba(255,255,255,0.98)",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.4)",
+          overflow: "hidden",
+        }}
+      >
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div>
-            <div style={{ fontWeight: 950, fontSize: 22, letterSpacing: "-0.4px" }}>
-              What changes when we stop looking at averages?
-            </div>
-
+        <div
+          style={{
+            padding: 22,
+            borderBottom: "1px solid #e2e8f0",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
             <div
               style={{
-                marginTop: 10,
-                lineHeight: 1.6,
-                fontSize: 14,
-                color: "#cbd5e1",
+                width: 40,
+                height: 40,
+                background: "#0f172a",
+                borderRadius: 12,
+              }}
+            />
+            <div>
+              <div style={{ fontWeight: 950, fontSize: 18 }}>
+                Average Air, Uneven Burdens
+              </div>
+              <div style={{ fontSize: 14, color: "#475569" }}>
+                London’s air quality is routinely reported as an average —
+                but every average hides as much as it reveals.
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={onStart}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 14,
+              border: "1px solid #cbd5e1",
+              background: "#f8fafc",
+              fontWeight: 800,
+              cursor: "pointer",
+            }}
+          >
+            Start Exploring →
+          </button>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: 28, lineHeight: 1.7 }}>
+          <p style={{ fontSize: 16 }}>
+            This interface offers <strong>two ways of seeing</strong> the same data:
+          </p>
+
+          <ul style={{ marginTop: 10, fontSize: 15 }}>
+            <li>
+              <strong>Average View:</strong> borough mean NO₂ concentration.
+            </li>
+            <li>
+              <strong>Burden View:</strong> population-weighted exposure
+              (and its inequality signals).
+            </li>
+          </ul>
+
+          <p style={{ marginTop: 18, fontSize: 15 }}>
+            Switch between them and notice what changes — and what quietly
+            fades from sight.
+          </p>
+
+          <p
+            style={{
+              marginTop: 12,
+              fontSize: 16,
+              fontWeight: 700,
+            }}
+          >
+            Changing the viewing mode does not just change colour —
+            it reshapes the city.
+          </p>
+
+          <div style={{ marginTop: 28, display: "flex", gap: 16 }}>
+            <button
+              onClick={() =>
+                onSelectCase(data?.meta?.maxUpJumpId || "E09000005")
+              }
+              style={{
+                padding: "12px 18px",
+                borderRadius: 16,
+                background: "#0f172a",
+                color: "white",
+                fontWeight: 900,
+                cursor: "pointer",
+                border: "none",
               }}
             >
-              London’s air quality is often summarised as a borough average.
-              But averages can obscure how many people actually live with exposure.
-              <br />
-              <br />
-              This interface lets you switch perspectives — and watch the city reorder itself.
-            </div>
+              Spotlight: Biggest rank jump (Brent) →
+            </button>
+
+            <button
+              onClick={onStart}
+              style={{
+                padding: "12px 18px",
+                borderRadius: 16,
+                border: "1px solid #cbd5e1",
+                background: "#f1f5f9",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Explore freely
+            </button>
           </div>
 
-          <button onClick={onClose} style={closeBtn}>
-            ✕
-          </button>
-        </div>
-
-        {/* Tension cards */}
-        <div style={cards}>
-          <div style={card}>
-            <div style={cardTitle}>Lens 1</div>
-            <div style={cardText}>
-              Boroughs ranked by mean NO₂ concentration.
-            </div>
+          <div
+            style={{
+              marginTop: 26,
+              fontSize: 13,
+              color: "#64748b",
+            }}
+          >
+            Tip: Hover the chart to locate boroughs on the map.
+            Click to open the narrative panel.
           </div>
-
-          <div style={card}>
-            <div style={cardTitle}>Lens 2</div>
-            <div style={cardText}>
-              Boroughs re-ranked by population-weighted exposure.
-            </div>
-          </div>
-
-          <div style={card}>
-            <div style={cardTitle}>Notice</div>
-            <div style={cardText}>
-              When the ranking shifts, ask: who becomes more visible — and why?
-            </div>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
-          <button onClick={onClose} style={primaryBtn}>
-            Enter the Interface
-          </button>
         </div>
       </div>
     </div>
   );
 }
-
-/* ===========================
-   Styles
-=========================== */
-
-const backdrop = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,0.6)",
-  display: "grid",
-  placeItems: "center",
-  zIndex: 50,
-  padding: 16,
-};
-
-const panel = {
-  width: "min(760px, 100%)",
-  background: "rgba(15,23,42,0.98)",
-  border: "1px solid rgba(255,255,255,0.12)",
-  borderRadius: 18,
-  padding: 24,
-  boxShadow: "0 25px 80px rgba(0,0,0,0.6)",
-  color: "#e5e7eb",
-};
-
-const closeBtn = {
-  border: "1px solid rgba(255,255,255,0.18)",
-  background: "rgba(255,255,255,0.06)",
-  color: "#e5e7eb",
-  borderRadius: 10,
-  width: 36,
-  height: 36,
-  cursor: "pointer",
-  fontWeight: 900,
-};
-
-const cards = {
-  marginTop: 20,
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  gap: 14,
-};
-
-const card = {
-  border: "1px solid rgba(255,255,255,0.10)",
-  borderRadius: 16,
-  padding: 14,
-  background: "rgba(255,255,255,0.05)",
-};
-
-const cardTitle = {
-  fontWeight: 900,
-  marginBottom: 6,
-  fontSize: 12,
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
-  color: "#94a3b8",
-};
-
-const cardText = {
-  fontSize: 13,
-  lineHeight: 1.5,
-  color: "#e2e8f0",
-};
-
-const primaryBtn = {
-  border: "1px solid rgba(59,130,246,0.55)",
-  background: "rgba(59,130,246,0.35)",
-  color: "#e5e7eb",
-  padding: "12px 16px",
-  borderRadius: 14,
-  cursor: "pointer",
-  fontWeight: 900,
-  fontSize: 14,
-  transition: "all 0.25s ease",
-};

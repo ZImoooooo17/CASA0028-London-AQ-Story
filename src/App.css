@@ -1,66 +1,82 @@
-/* 整页容器 */
+/* ===== 基础布局与结构 ===== */
 .storyPage {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden; /* 防止整页滚动，将滚动权交给侧边栏 */
   background: #f8fafc;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* 头部 */
-.headerBlock {
-  padding: 40px 60px 20px 60px;
-}
-
-/* narrative 区域 */
-.narrativeBlock {
-  padding: 0 60px 40px 60px;
-  max-width: 900px;
-}
-
-/* 三栏交互区 */
+/* ===== 核心交互区 ===== */
 .interactiveSection {
-  padding: 0 60px 60px 60px;
-}
-
-/* 三栏容器 */
-.interactiveShell {
+  flex: 1;
   display: flex;
-  gap: 24px;
-
-  height: min(720px, 75vh);
-  min-height: 560px;
+  flex-direction: column;
+  min-height: 0; 
 }
 
-/* 左侧 */
-.leftPanel {
+/* 三栏容器：关键是 overflow: visible 确保浮层显示 */
+.interactiveShell {
   flex: 1;
-  overflow-y: auto;
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
+  display: flex;
+  min-height: 0;
+  overflow: visible; 
 }
 
-/* 中间地图 */
-.mapPanel {
-  flex: 1.2;
+/* 左侧列表面板 */
+.interactiveShell > aside:first-child {
+  flex: 0 0 380px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  overflow-y: auto;
+}
+
+/* 中间地图主区 */
+.interactiveShell > main {
+  flex: 1 1 auto;
   position: relative;
-  border-radius: 16px;
-  overflow: hidden;
+  min-width: 0;
+  overflow: visible; /* 🎯 确保 Legend 不被父级容器裁切 */
 }
 
-/* 右侧详情 */
-.rightPanel {
-  flex: 1;
+/* 确保地图 Canvas 撑满 */
+.interactiveShell > main > div {
+  height: 100%;
+}
+
+/* 右侧详情面板 */
+.interactiveShell > aside:last-child {
+  /* 宽度在 JSX 中通过 style 动态控制 (0 -> 420px) */
+  background: #ffffff;
   overflow-y: auto;
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
 }
 
-/* footer */
-.footerBlock {
-  padding: 40px 60px;
-  margin-top: auto;
-  font-size: 14px;
-  color: #64748b;
+/* ===== MapLibre 引擎修复：确保图层溢出可见 ===== */
+.maplibregl-map {
+  overflow: visible !important;
+}
+
+.maplibregl-canvas-container {
+  overflow: visible !important;
+}
+
+/* ===== 滚动条美化 ===== */
+aside::-webkit-scrollbar {
+  width: 5px;
+}
+aside::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+aside::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+aside::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ===== 脚注与页眉限制弹性 ===== */
+header, footer {
+  flex-shrink: 0;
 }
