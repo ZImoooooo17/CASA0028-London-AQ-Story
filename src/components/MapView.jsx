@@ -6,50 +6,52 @@ export default function MapView({ data, mode, mapRef, selectedId, onSelectedId, 
   const [hoverPopup, setHoverPopup] = useState(null);
   const [labelLayerId, setLabelLayerId] = useState(null);
 
-  // 根据模式选择数据字段
-  const metricKey = mode === "weighted" ? "totalExposure" : "NO2";
-
-  // 1. 阶梯式颜色表达式 (Step Color Expression)
+  // 1. 发散色阶逻辑：以 1.0 为中心，并强化中间灰色的存在感
   const fillColorExpr = useMemo(() => {
-    const key = metricKey;
-    const missingColor = "#d1d5db";
+    const missingColor = "#f3f4f6";
 
     if (mode === "raw") {
-      // NO2 原始浓度 (µg/m³) 分段
+      // 原始 NO2 浓度色阶
       return [
-        "step", ["coalesce", ["get", key], -1],
+        "step", ["coalesce", ["get", "NO2"], -1],
         missingColor, 0,
-        "#eff6ff", 24, // < 24
-        "#bfdbfe", 28, // 24-28
-        "#60a5fa", 32, // 28-32
-        "#2563eb", 36, // 32-36
-        "#1e3a8a"      // > 36
-      ];
-    } else {
-      // Total Exposure (总负担) 分段 - 数值范围约 50-150
-      return [
-        "step", ["coalesce", ["get", key], -1],
-        missingColor, 0,
-        "#eff6ff", 60, 
-        "#bfdbfe", 80, 
-        "#60a5fa", 100, 
-        "#2563eb", 120, 
+        "#eff6ff", 24, 
+        "#bfdbfe", 28, 
+        "#60a5fa", 32, 
+        "#2563eb", 36, 
         "#1e3a8a"
       ];
+    } else {
+      // 优化后的 Burden Ratio 发散色阶
+      return [
+        "step", ["coalesce", ["get", "burdenRatio"], -1],
+        missingColor, 0,
+        "#3182ce", 0.8,   // 负担显著较低 (深蓝)
+        "#93c5fd", 0.95,  // 略低于平均 (浅蓝)
+        "#cbd5e0", 1.05,  // 修改点：使用更扎实的灰色代表 City Average
+        "#fca5a5", 1.2,   // 略高于平均 (浅红)
+        "#e53e3e"         // 负担显著极重 (深红)
+      ];
     }
-  }, [metricKey, mode]);
+  }, [mode]);
 
-  // 找回地名层 ID
+  // 找回地图的地名层，确保行政区填充在文字下方
   const onMapLoad = (e) => {
     const layers = e.target.getStyle().layers;
     const labelLayer = layers.find(l => l.type === 'symbol' && l.layout?.['text-field']);
     if (labelLayer) setLabelLayerId(labelLayer.id);
   };
 
-  // 图例配置
+  // 2. 更新图例说明
   const legendItems = mode === "raw" 
     ? [ { c: "#eff6ff", t: "< 24" }, { c: "#bfdbfe", t: "24-28" }, { c: "#60a5fa", t: "28-32" }, { c: "#2563eb", t: "32-36" }, { c: "#1e3a8a", t: "> 36" } ]
-    : [ { c: "#eff6ff", t: "< 60" }, { c: "#bfdbfe", t: "60-80" }, { c: "#60a5fa", t: "80-100" }, { c: "#2563eb", t: "100-120" }, { c: "#1e3a8a", t: "> 120" } ];
+    : [ 
+        { c: "#3182ce", t: "Lower Burden (< 0.8)" }, 
+        { c: "#93c5fd", t: "0.8 - 0.95" }, 
+        { c: "#cbd5e0", t: "City Average (1.0)" }, 
+        { c: "#fca5a5", t: "1.05 - 1.2" }, 
+        { c: "#e53e3e", t: "Higher Burden (> 1.2)" } 
+      ];
 
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
@@ -78,10 +80,13 @@ export default function MapView({ data, mode, mapRef, selectedId, onSelectedId, 
               id="borough-fill"
               type="fill"
               beforeId={labelLayerId}
-              paint={{ "fill-color": fillColorExpr, "fill-opacity": 0.7 }}
+              paint={{ 
+                "fill-color": fillColorExpr, 
+                "fill-opacity": 0.85 // 提高不透明度，确保灰色区域不再像“透明”
+              }}
             />
             
-            {/* 悬停高亮边框 */}
+            {/* 悬停高亮 */}
             <Layer
               id="borough-hover-outline"
               type="line"
@@ -90,12 +95,12 @@ export default function MapView({ data, mode, mapRef, selectedId, onSelectedId, 
               paint={{ "line-color": "#f59e0b", "line-width": 3 }}
             />
 
-            {/* 选中高亮边框 */}
+            {/* 选中高亮 */}
             <Layer
               id="borough-select-outline"
               type="line"
               filter={["==", ["get", "LAD22CD"], selectedId || ""]}
-              paint={{ "line-color": "#ef4444", "line-width": 3 }}
+              paint={{ "line-color": "#1a202c", "line-width": 3 }}
             />
           </Source>
         )}
@@ -103,23 +108,27 @@ export default function MapView({ data, mode, mapRef, selectedId, onSelectedId, 
         {/* Legend 图例 */}
         <div style={{
           position: "absolute", bottom: "30px", left: "20px",
-          background: "white", padding: "12px", borderRadius: "8px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)", fontSize: "11px", zIndex: 20
+          background: "white", padding: "16px", borderRadius: "12px",
+          boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", fontSize: "11px", zIndex: 20,
+          border: "1px solid #e2e8f0"
         }}>
-          <div style={{ fontWeight: "bold", marginBottom: "8px" }}>
-            {mode === "raw" ? "NO₂ Intensity (µg/m³)" : "Total Population Burden"}
+          <div style={{ fontWeight: "800", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            {mode === "raw" ? "NO₂ Intensity (µg/m³)" : "Inequity: Burden Ratio"}
           </div>
           {legendItems.map((item, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", marginBottom: "4px" }}>
-              <div style={{ width: "12px", height: "12px", background: item.c, marginRight: "8px", borderRadius: "2px" }} />
-              <span style={{ color: "#666" }}>{item.t}</span>
+            <div key={i} style={{ display: "flex", alignItems: "center", marginBottom: "6px" }}>
+              <div style={{ 
+                width: "14px", height: "14px", background: item.c, 
+                marginRight: "10px", borderRadius: "3px", border: "1px solid #eee" 
+              }} />
+              <span style={{ color: "#4a5568", fontWeight: "500" }}>{item.t}</span>
             </div>
           ))}
         </div>
 
         {hoverPopup && (
           <Popup longitude={hoverPopup.lng} latitude={hoverPopup.lat} closeButton={false} offset={10}>
-            <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{hoverPopup.props.LAD22NM}</div>
+            <div style={{ fontSize: '12px', fontWeight: '800', padding: "2px" }}>{hoverPopup.props.LAD22NM}</div>
           </Popup>
         )}
       </Map>
