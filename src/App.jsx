@@ -148,10 +148,11 @@ function IntroModal({ onStart, onSelectCase }) {
 }
 
 /**
- * ✅ Header 下方 Narrative Intro
+ * ✅ Header 下方 Narrative Intro（已存在 + 小幅增强：可折叠 Why）
  */
 function NarrativeIntro({ mode, onReplayIntro }) {
   const isRaw = mode === "raw";
+  const [openWhy, setOpenWhy] = useState(false);
 
   return (
     <section
@@ -184,6 +185,23 @@ function NarrativeIntro({ mode, onReplayIntro }) {
               >
                 Current view: {isRaw ? "Raw Concentration" : "Population Burden"}
               </span>
+
+              <button
+                onClick={() => setOpenWhy((v) => !v)}
+                style={{
+                  border: "1px solid #e2e8f0",
+                  background: "white",
+                  padding: "6px 10px",
+                  borderRadius: 999,
+                  cursor: "pointer",
+                  fontWeight: 800,
+                  fontSize: 12,
+                  color: "#0f172a",
+                }}
+                title="Why does this matter?"
+              >
+                {openWhy ? "Hide why" : "Why?"}
+              </button>
             </div>
 
             <p style={{ margin: "8px 0 0", color: "#475569", lineHeight: 1.55, fontSize: 13.5 }}>
@@ -191,6 +209,26 @@ function NarrativeIntro({ mode, onReplayIntro }) {
               <strong>Raw NO₂</strong> and a <strong>population-weighted burden ratio</strong> shows how statistical
               framing can reorder borough rankings — revealing where “average” air hides disproportionate exposure.
             </p>
+
+            {openWhy && (
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: "10px 12px",
+                  borderRadius: 14,
+                  border: "1px solid #e2e8f0",
+                  background: "#f8fafc",
+                  color: "#334155",
+                  fontSize: 12.8,
+                  lineHeight: 1.55,
+                }}
+              >
+                <strong>Raw</strong> is an average concentration. <strong>Population Burden</strong> compares a
+                borough’s <em>share of total exposure</em> with its <em>share of population</em>. That’s why the map
+                can “reorder” — the same pollution level can imply very different impacts depending on how many
+                people are exposed.
+              </div>
+            )}
 
             <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <div
@@ -358,7 +396,6 @@ function LegendCard({ mode }) {
             ))}
           </div>
 
-          {/* ✅ Explanation upgraded */}
           <div style={{ marginTop: 12, fontSize: 12.5, color: "#475569", lineHeight: 1.5 }}>
             {isRaw ? (
               <>
@@ -376,7 +413,7 @@ function LegendCard({ mode }) {
                   <strong>1.0</strong> = proportional (burden share matches population share)
                 </div>
                 <div style={{ marginTop: 6, opacity: 0.9 }}>
-                  <strong>&gt; 1.0</strong> = disproportionate exposure pressure • <strong>&lt; 1.0</strong> = lower-than-expected burden
+                  <strong>&gt; 1.0</strong> = disproportionate exposure • <strong>&lt; 1.0</strong> = lower-than-expected burden
                 </div>
               </>
             )}
@@ -658,7 +695,6 @@ export default function App() {
     </div>
   );
 }
-
 
 
 
