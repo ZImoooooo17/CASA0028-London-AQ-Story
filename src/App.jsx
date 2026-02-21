@@ -59,9 +59,7 @@ function IntroModal({ onStart, onSelectCase }) {
                 marginBottom: 8,
               }}
             />
-            <div style={{ fontSize: 10, fontWeight: "bold", color: "#e53e3e" }}>
-              SYSTEMIC BURDEN
-            </div>
+            <div style={{ fontSize: 10, fontWeight: "bold", color: "#e53e3e" }}>SYSTEMIC BURDEN</div>
           </div>
         </div>
 
@@ -430,7 +428,6 @@ export default function App() {
   const [hoveredId, setHoveredId] = useState(null);
   const [showIntro, setShowIntro] = useState(true);
 
-  // ✅ dramaturgy: toast
   const [showReorderToast, setShowReorderToast] = useState(false);
 
   const { data, error } = useLondonData();
@@ -482,7 +479,6 @@ export default function App() {
     setTimeout(() => handleSelect(id), 600);
   };
 
-  // ✅ Mode 切换 dramaturgy：toast + 自动聚焦最大 rankJump
   const triggerReorderDramaturgy = (nextMode) => {
     setShowReorderToast(true);
     window.setTimeout(() => setShowReorderToast(false), 1200);
@@ -511,6 +507,11 @@ export default function App() {
 
   const isLoading = !data;
 
+  const headerExplain =
+    mode === "raw"
+      ? "Raw shows borough-average NO₂. Averages can hide how many people live with exposure."
+      : "Population Burden ranks by burden ratio (vs 100% average). Rankings can shift—revealing disproportionate exposure.";
+
   return (
     <div style={{ display: "flex", height: "100vh", flexDirection: "column", background: "#f8f9fa" }}>
       {showIntro && <IntroModal onStart={() => setShowIntro(false)} onSelectCase={handleCaseSelect} />}
@@ -535,8 +536,11 @@ export default function App() {
             <h1 style={{ fontSize: 19, fontWeight: 900, letterSpacing: "-0.5px", margin: 0 }}>
               London Air <span style={{ color: "#2563eb" }}>Impact</span>
             </h1>
-            <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-              Switch metrics to reveal hidden inequality
+
+            {/* ✅ 2–3 行 narrative（更直接） */}
+            <div style={{ fontSize: 12, color: "#64748b", marginTop: 2, lineHeight: 1.25 }}>
+              Average air is not equally shared.
+              <span style={{ display: "block" }}>Switch metrics to see how representation reshapes inequality.</span>
             </div>
           </div>
         </div>
@@ -579,10 +583,17 @@ export default function App() {
         </div>
       </header>
 
-      {/* ✅ Narrative Intro */}
+      {/* ✅ 轻量 explanatory text（模式切换即时解释） */}
+      <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "10px 30px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", fontSize: 12.8, color: "#475569" }}>
+          <strong style={{ color: "#0f172a" }}>Mode:</strong> {headerExplain}
+        </div>
+      </div>
+
+      {/* Narrative Intro */}
       <NarrativeIntro mode={mode} onReplayIntro={() => setShowIntro(true)} />
 
-      {/* ✅ Toast dramaturgy */}
+      {/* Toast dramaturgy */}
       {showReorderToast && (
         <div
           style={{
@@ -611,13 +622,7 @@ export default function App() {
           {isLoading ? (
             <div style={{ padding: 18, color: "#64748b" }}>Loading charts…</div>
           ) : (
-            <BarRankChart
-              data={data}
-              mode={mode}
-              selectedId={selectedId}
-              onSelect={handleSelect}
-              onHover={setHoveredId}
-            />
+            <BarRankChart data={data} mode={mode} selectedId={selectedId} onSelect={handleSelect} onHover={setHoveredId} />
           )}
         </aside>
 
@@ -650,11 +655,7 @@ export default function App() {
               overflowY: "auto",
             }}
           >
-            <DetailPanel
-              selectedFeature={data.features.find((f) => f.id === selectedId)}
-              mode={mode}
-              onClose={() => setSelectedId(null)}
-            />
+            <DetailPanel selectedFeature={data.features.find((f) => f.id === selectedId)} mode={mode} onClose={() => setSelectedId(null)} />
           </aside>
         )}
       </div>
@@ -673,9 +674,7 @@ export default function App() {
       >
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", gap: 40 }}>
           <div style={{ flex: 2 }}>
-            <strong style={{ color: "#1a202c", display: "block", marginBottom: 4 }}>
-              Interface Reflection:
-            </strong>
+            <strong style={{ color: "#1a202c", display: "block", marginBottom: 4 }}>Interface Reflection:</strong>
             This project challenges the apparent neutrality of environmental data. By shifting from raw NO₂
             concentrations to a population-weighted burden ratio, the interface makes visible how spatial averages
             can conceal uneven exposure. In this sense, the map acts not only as a visualisation, but as a prompt for
@@ -683,9 +682,7 @@ export default function App() {
           </div>
 
           <div style={{ flex: 1 }}>
-            <strong style={{ color: "#1a202c", display: "block", marginBottom: 4 }}>
-              Target Users & Agency:
-            </strong>
+            <strong style={{ color: "#1a202c", display: "block", marginBottom: 4 }}>Target Users & Agency:</strong>
             Intended for London residents, campaigners, and local decision-makers, the platform positions users not
             as passive viewers but as active interpreters—supporting comparison, discussion, and advocacy around
             spatial inequality.

@@ -19,7 +19,6 @@ export default function useLondonData() {
   useEffect(() => {
     async function load() {
       try {
-        // ✅ 相对路径适配 GitHub Pages base url
         const [geoRes, no2Res, popRes] = await Promise.all([
           fetch("data/london_boroughs_4326.geojson"),
           fetch("data/no2_london.csv"),
@@ -43,7 +42,7 @@ export default function useLondonData() {
           const NO2 = Number(no2Map.get(code) || 0);
           const Population = Number(popMap.get(code) || 0);
 
-          // totalExposure 仅为了地图显示可读性缩放，不用于 share 计算
+          // 仅用于可视化展示（你原来就有）
           const totalExposure = (NO2 * Population) / 100000;
 
           return {
@@ -59,10 +58,9 @@ export default function useLondonData() {
           };
         });
 
-        // 2) 计算城市总人口、总暴露（用于 burdenRatio 与 shares）
+        // 2) 城市总人口 + 总暴露（用于 ratio & shares）
         const totalPop = features.reduce((sum, f) => sum + (f.properties.Population || 0), 0);
 
-        // 注意：totalExp 用未缩放的 NO2*Population（和 cityAvgNO2 保持一致）
         const totalExp = features.reduce(
           (sum, f) => sum + (f.properties.NO2 * f.properties.Population || 0),
           0
@@ -70,48 +68,38 @@ export default function useLondonData() {
 
         const cityAvgNO2 = totalPop > 0 ? totalExp / totalPop : 0;
 
-        // ✅ 关键：给每个 borough 写入 burdenRatio + popShare + burdenShare
+        // 3) 写入 burdenRatio + shares
         features.forEach((f) => {
           const p = f.properties;
 
-          // burdenRatio = NO2 / cityAvgNO2（你原来的定义保留）
+          // burdenRatio = NO2 / cityAvgNO2 （= burdenShare/popShare，数学上等价）
           p.burdenRatio = cityAvgNO2 > 0 ? p.NO2 / cityAvgNO2 : 0;
 
-          // ✅ NEW: shares（0~1）
+          // shares（0~1）
           p.popShare = totalPop > 0 ? p.Population / totalPop : 0;
           p.burdenShare = totalExp > 0 ? (p.NO2 * p.Population) / totalExp : 0;
 
-          // 可选：差值（有时写 narrative 很好用）
           p.shareGap = p.burdenShare - p.popShare;
         });
 
-        // 3) 排名：Raw Rank (按 NO2)
+        // 4) Raw Rank：按 NO2（高 -> 低）
         const sortedByRaw = [...features].sort((a, b) => b.properties.NO2 - a.properties.NO2);
         sortedByRaw.forEach((f, idx) => {
           f.properties.rawRank = idx + 1;
         });
 
-        // 4) 排名：Weighted Rank (按 NO2*Population)
+        // ✅ 5) Weighted Rank：按 burdenRatio（高 -> 低）
+        // 这一步是修复关键：让“Population Burden”排序与图表/地图一致
         const sortedByWeighted = [...features].sort(
-          (a, b) => b.properties.totalExposure - a.properties.totalExposure
+          (a, b) => b.properties.burdenRatio - a.properties.burdenRatio
         );
 
         sortedByWeighted.forEach((f, idx) => {
           f.properties.weightedRank = idx + 1;
 
-          // rankJump = rawRank - weightedRank（你原来的叙事逻辑保留）
+          // rankJump = rawRank - weightedRank（保持你现在 DetailPanel 的解释一致）
           f.properties.rankJump = (f.properties.rawRank || 0) - (f.properties.weightedRank || 0);
         });
-
-        // quick sanity check（Greenwich 应该不会是 0%）
-        const g = features.find((x) => x.properties?.LAD22NM === "Greenwich" || x.id === "E09000011");
-        if (g) {
-          console.log("Greenwich shares:", {
-            popShare: g.properties.popShare,
-            burdenShare: g.properties.burdenShare,
-            burdenRatio: g.properties.burdenRatio,
-          });
-        }
 
         setData({ type: "FeatureCollection", features });
       } catch (err) {

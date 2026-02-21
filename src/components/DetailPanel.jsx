@@ -207,7 +207,7 @@ function getShiftDriver(burdenRatio, absJump) {
 
   if (bigShift && nearOne) {
     return {
-      tone: "blue", // ✅ 更直觉：解释型机制
+      tone: "blue",
       label: "Density-driven shift",
       hint: "Shift is driven less by disproportionality and more by how many people live with the exposure.",
     };
@@ -233,7 +233,7 @@ function getShiftDriver(burdenRatio, absJump) {
     tone: "neutral",
     label: "Mixed / proportional",
     hint: "Shares are close: any shift is likely driven by absolute exposure rather than disproportionality.",
-    };
+  };
 }
 
 /* ---------------- RankJump module ---------------- */
@@ -356,7 +356,6 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
                   </Pill>
                 )}
 
-                {/* ✅ 只在 Burden 视角输出 driver */}
                 {isBurden && dir !== "unknown" && (
                   <Pill tone={driver.tone} title={driver.hint}>
                     {driver.label}
@@ -376,7 +375,7 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
                 background: "rgba(255,255,255,0.72)",
                 boxShadow: "0 12px 25px rgba(0,0,0,0.08)",
               }}
-              title="rankJump = rawRank − weightedRank"
+              title="rankJump = rawRank − weightedRank (positive means it looks worse in the burden view)"
             >
               <div style={{ fontSize: 11, fontWeight: 900, color: "rgba(15,23,42,0.45)" }}>JUMP</div>
               <div style={{ fontSize: 26, fontWeight: 950, color: palette.accent, letterSpacing: "-0.6px" }}>
@@ -395,7 +394,9 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
               }}
             >
               <Label style={{ color: "rgba(37,99,235,0.85)" }}>Raw rank</Label>
-              <div style={{ fontSize: 30, fontWeight: 950, letterSpacing: "-0.8px" }}>{rr == null ? "N/A" : `#${rr}`}</div>
+              <div style={{ fontSize: 30, fontWeight: 950, letterSpacing: "-0.8px" }}>
+                {rr == null ? "N/A" : `#${rr}`}
+              </div>
             </div>
 
             <div
@@ -468,7 +469,6 @@ function RankJumpCard({ name, rawRank, weightedRank, rankJump, burdenRatio, isBu
             <strong style={{ color: "rgba(15,23,42,0.92)" }}>{palette.story}</strong>
             <div style={{ marginTop: 6, opacity: 0.95 }}>{palette.meaning}</div>
 
-            {/* ✅ 只在 Burden 视角输出 “why” */}
             {isBurden && dir !== "unknown" && (
               <div style={{ marginTop: 8, color: "rgba(15,23,42,0.60)" }}>
                 <strong style={{ color: "rgba(15,23,42,0.82)" }}>Why this shift?</strong> {driver.hint}
@@ -613,16 +613,20 @@ export default function DetailPanel({ selectedFeature, onClose, mode = "raw" }) 
   const p = selectedFeature.properties || {};
   const name = p.LAD22NM || "Borough";
 
-  const rawRank = safeNum(p.rawRank);
-  const weightedRank = safeNum(p.weightedRank);
-  const rankJump = safeNum(p.rankJump);
+  // ✅ ranks: allow multiple naming just in case
+  const rawRank = safeNum(p.rawRank ?? p.RawRank ?? p.raw_rank);
+  const weightedRank = safeNum(p.weightedRank ?? p.WeightedRank ?? p.weighted_rank);
+  const rankJump = safeNum(p.rankJump ?? p.RankJump ?? p.rank_jump);
 
-  const burdenRatio = safeNum(p.burdenRatio);
+  // ✅ ratio + shares: allow multiple naming
+  const burdenRatio = safeNum(p.burdenRatio ?? p.BurdenRatio ?? p.burden_ratio);
   const interp = interpretBurden(burdenRatio);
 
-  const pop = safeNum(p.Population);
-  const burdenShare = safeNum(p.burdenShare);
-  const popShare = safeNum(p.popShare);
+  const pop = safeNum(p.Population ?? p.population ?? p.pop);
+
+  // 🔥 你原来这里写的是 p.popShare，容易导致 N/A
+  const burdenShare = safeNum(p.burdenShare ?? p.burden_share);
+  const popShare = safeNum(p.populationShare ?? p.popShare ?? p.population_share);
 
   const narrative = !isBurden
     ? {
