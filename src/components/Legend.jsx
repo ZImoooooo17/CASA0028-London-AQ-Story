@@ -26,11 +26,11 @@ export default function Legend({
 
   const burdenBands = useMemo(
     () => [
-      { label: "< 0.8", color: "#3182ce" },
-      { label: "0.8 – 0.95", color: "#93c5fd" },
-      { label: "0.95 – 1.05", color: "#cbd5e0" },
-      { label: "1.05 – 1.2", color: "#fca5a5" },
-      { label: "> 1.2", color: "#e53e3e" },
+      { label: "< 0.8", color: "#e2e8f0" },
+      { label: "0.8 – 0.95", color: "#fecaca" },
+      { label: "0.95 – 1.05", color: "#fca5a5" },
+      { label: "1.05 – 1.2", color: "#ef4444" },
+      { label: "> 1.2", color: "#7f1d1d" },
     ],
     []
   );
@@ -38,14 +38,14 @@ export default function Legend({
   const bands = isRaw ? rawBands : burdenBands;
 
   /* ===========================
-     Positioning
+     Positioning (NO event blocking)
   =========================== */
 
   const pos = (() => {
     const base = {
       position: "absolute",
       zIndex: 120,
-      pointerEvents: "auto",
+      pointerEvents: "none", // ⭐ 关键：不阻挡地图
     };
 
     if (anchor === "top-right") return { ...base, right: 12, top: 12 };
@@ -56,19 +56,20 @@ export default function Legend({
   })();
 
   /* ===========================
-     Card style
+     Card style (only card interactive)
   =========================== */
 
   const card = {
-    width: open ? 300 : 42,
-    maxHeight: open ? 220 : 42,
+    width: open ? 300 : 44,
+    maxHeight: open ? 240 : 44,
     overflow: "hidden",
-    background: "rgba(255,255,255,0.94)",
+    background: "rgba(255,255,255,0.95)",
     border: "1px solid #e2e8f0",
     borderRadius: 16,
     boxShadow: "0 10px 26px rgba(0,0,0,0.12)",
     backdropFilter: "blur(8px)",
     transition: "width 180ms ease, max-height 180ms ease",
+    pointerEvents: "auto", // ⭐ 只允许卡片接收事件
   };
 
   /* ===========================
@@ -92,7 +93,7 @@ export default function Legend({
               width: 10,
               height: 10,
               borderRadius: 999,
-              background: isRaw ? "#2563eb" : "#e53e3e",
+              background: isRaw ? "#2563eb" : "#ef4444",
               flexShrink: 0,
             }}
           />
@@ -135,7 +136,7 @@ export default function Legend({
 
         {/* Body */}
         {open && (
-          <div style={{ padding: "0 12px 12px" }}>
+          <div style={{ padding: "0 12px 14px" }}>
             <div style={{ display: "grid", gap: 10 }}>
               {bands.map((b) => (
                 <div
@@ -169,12 +170,12 @@ export default function Legend({
               ))}
             </div>
 
-            {/* Concise semantic guidance */}
             <div
               style={{
-                marginTop: 12,
+                marginTop: 14,
                 fontSize: 12.5,
                 color: "#475569",
+                lineHeight: 1.4,
               }}
             >
               {isRaw

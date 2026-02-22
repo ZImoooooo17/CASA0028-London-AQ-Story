@@ -1,5 +1,4 @@
 import { useRef, useState, useMemo } from "react";
-import maplibregl from "maplibre-gl";
 import IntroModal from "./components/IntroModal";
 import MapView from "./components/MapView";
 import BarRankChart from "./components/BarRankChart";
@@ -27,48 +26,22 @@ export default function App() {
     );
   };
 
-  const flyToFeature = (id) => {
-    const map = mapRef.current?.getMap?.();
-    const feature = findFeatureById(id);
-    if (!map || !feature) return;
-
-    const bounds = new maplibregl.LngLatBounds();
-
-    const extendCoords = (c) => {
-      if (typeof c[0] === "number" && typeof c[1] === "number") {
-        bounds.extend(c);
-      } else if (Array.isArray(c)) {
-        c.forEach(extendCoords);
-      }
-    };
-
-    extendCoords(feature.geometry.coordinates);
-
-    map.resize();
-    map.fitBounds(bounds, {
-      padding: { top: 60, bottom: 60, left: 60, right: id ? 420 : 60 },
-      duration: 1000,
-    });
-  };
-
   const handleSelect = (id) => {
     setSelectedId(id);
-    if (id && data) requestAnimationFrame(() => flyToFeature(id));
   };
 
   if (error) return <div style={{ padding: 24 }}>Load Error.</div>;
   const isLoading = !data;
   const selectedFeature = selectedId ? findFeatureById(selectedId) : null;
 
-  /* ---------- Rank Reordering Calculation ---------- */
+  /* ================= RANK REORDERING ================= */
 
   const rankExtremes = useMemo(() => {
     if (!data?.features?.length) return null;
 
     const features = data.features.map((f) => ({
+      id: f.properties.LAD22CD,
       name: f.properties.LAD22NM,
-      rawRank: f.properties.rawRank,
-      weightedRank: f.properties.weightedRank,
       jump: f.properties.rankJump,
     }));
 
@@ -92,7 +65,7 @@ export default function App() {
           onSelectCase={(id) => {
             setMode("weighted");
             setShowIntro(false);
-            setTimeout(() => handleSelect(id), 600);
+            setTimeout(() => setSelectedId(id), 600);
           }}
         />
       )}
@@ -112,25 +85,10 @@ export default function App() {
         }}
       >
         <div>
-          <h1
-            style={{
-              fontSize: 20,
-              fontWeight: 950,
-              margin: 0,
-              letterSpacing: "-0.4px",
-            }}
-          >
+          <h1 style={{ fontSize: 20, fontWeight: 950, margin: 0 }}>
             Average Air, Uneven Burdens
           </h1>
-
-          <div
-            style={{
-              fontSize: 13,
-              color: "#475569",
-              marginTop: 4,
-              lineHeight: 1.4,
-            }}
-          >
+          <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>
             Average air quality is not neutral. Switching the metric reshapes the map of concern.
           </div>
         </div>
@@ -150,6 +108,8 @@ export default function App() {
 
       <section className="interactiveSection">
         <div className="interactiveShell">
+
+          {/* LEFT LIST */}
           <aside
             style={{
               flex: "0 0 380px",
@@ -169,6 +129,7 @@ export default function App() {
             )}
           </aside>
 
+          {/* MAP */}
           <main style={{ flex: "1 1 auto", position: "relative" }}>
             {!isLoading && (
               <>
@@ -186,28 +147,27 @@ export default function App() {
             )}
           </main>
 
-          <aside
-            style={{
-              flex: selectedId ? "0 0 420px" : "0",
-              opacity: selectedId ? 1 : 0,
-              transition: "all 0.3s ease",
-              background: "#fff",
-              borderLeft: selectedId ? "1px solid #e2e8f0" : "none",
-              overflowY: "auto",
-            }}
-          >
-            {selectedFeature && (
+          {/* RIGHT PANEL */}
+          {selectedId && selectedFeature && (
+            <aside
+              style={{
+                flex: "0 0 420px",
+                background: "#fff",
+                borderLeft: "1px solid #e2e8f0",
+                overflowY: "auto",
+              }}
+            >
               <DetailPanel
                 selectedFeature={selectedFeature}
                 mode={mode}
                 onClose={() => setSelectedId(null)}
               />
-            )}
-          </aside>
+            </aside>
+          )}
         </div>
       </section>
 
-      {/* ================= RANK REORDERING SECTION ================= */}
+      {/* ================= CLICKABLE RANK SECTION ================= */}
 
       {rankExtremes && (
         <section
@@ -218,22 +178,34 @@ export default function App() {
           }}
         >
           <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, marginBottom: 30 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 900 }}>
               When population is considered, London is reordered
             </h2>
 
-            <div style={{ display: "flex", gap: 80 }}>
+            <div style={{ display: "flex", gap: 80, marginTop: 30 }}>
+              
               {rankExtremes.upward && (
                 <div>
                   <div style={{ fontSize: 13, color: "#64748b" }}>
                     Largest upward shift
                   </div>
-                  <div style={{ fontWeight: 900, fontSize: 16 }}>
+
+                  <div
+                    onClick={() => {
+                      setMode("weighted");
+                      setSelectedId(rankExtremes.upward.id);
+                    }}
+                    style={{
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      fontSize: 16,
+                      marginTop: 4,
+                    }}
+                  >
                     {rankExtremes.upward.name}
                   </div>
-                  <div style={{ fontSize: 14 }}>
-                    +{rankExtremes.upward.jump} places
-                  </div>
+
+                  <div>+{rankExtremes.upward.jump} places</div>
                 </div>
               )}
 
@@ -242,23 +214,28 @@ export default function App() {
                   <div style={{ fontSize: 13, color: "#64748b" }}>
                     Largest downward shift
                   </div>
-                  <div style={{ fontWeight: 900, fontSize: 16 }}>
+
+                  <div
+                    onClick={() => {
+                      setMode("weighted");
+                      setSelectedId(rankExtremes.downward.id);
+                    }}
+                    style={{
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      fontSize: 16,
+                      marginTop: 4,
+                    }}
+                  >
                     {rankExtremes.downward.name}
                   </div>
-                  <div style={{ fontSize: 14 }}>
-                    {rankExtremes.downward.jump} places
-                  </div>
+
+                  <div>{rankExtremes.downward.jump} places</div>
                 </div>
               )}
             </div>
 
-            <p
-              style={{
-                marginTop: 25,
-                fontSize: 14,
-                color: "#475569",
-              }}
-            >
+            <p style={{ marginTop: 25, color: "#475569" }}>
               Dense boroughs rise in concern, even when their raw concentration is not the highest.
             </p>
           </div>
@@ -272,9 +249,6 @@ export default function App() {
           padding: "40px 30px",
           background: "#f8fafc",
           borderTop: "1px solid #e2e8f0",
-          fontSize: 14,
-          color: "#475569",
-          lineHeight: 1.6,
         }}
       >
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
