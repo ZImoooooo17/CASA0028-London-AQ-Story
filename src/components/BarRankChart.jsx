@@ -23,19 +23,19 @@ export default function BarRankChart({
   const [delayedMode, setDelayedMode] = useState(mode);
   const [showNote, setShowNote] = useState(false);
 
-  // 🎬 延迟排序节奏（地图先变）
+  // 地图先变，列表稍后排序
   useEffect(() => {
     const t = setTimeout(() => {
       setDelayedMode(mode);
-    }, 120);
+    }, 150);
     return () => clearTimeout(t);
   }, [mode]);
 
-  // 🎬 排序提示文字（短暂淡出）
+  // 排序提示
   useEffect(() => {
     if (mode === "weighted") {
       setShowNote(true);
-      const t = setTimeout(() => setShowNote(false), 1000);
+      const t = setTimeout(() => setShowNote(false), 1200);
       return () => clearTimeout(t);
     }
   }, [mode]);
@@ -70,6 +70,7 @@ export default function BarRankChart({
               : null,
             barWidthPct: `${(idx / maxExp) * 100}%`,
             isHigh: idx >= 120,
+            rankJump: num(f.properties?.rankJump),
           };
         });
     }
@@ -95,6 +96,7 @@ export default function BarRankChart({
           displaySecondary: null,
           barWidthPct: `${(v / maxNO2) * 100}%`,
           isHigh: v >= 30,
+          rankJump: num(f.properties?.rankJump),
         };
       });
   }, [data, delayedMode]);
@@ -127,6 +129,7 @@ export default function BarRankChart({
         flexDirection: "column",
       }}
     >
+      {/* HEADER */}
       <div
         style={{
           position: "sticky",
@@ -161,13 +164,11 @@ export default function BarRankChart({
           {subtitle}
         </div>
 
-        {/* 🎬 排序确认提示 */}
         {showNote && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.5 }}
             style={{
               fontSize: 10,
               marginTop: 6,
@@ -179,36 +180,27 @@ export default function BarRankChart({
         )}
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          position: "relative",
-          paddingTop: 10,
-        }}
-      >
+      {/* LIST */}
+      <div style={{ flex: 1, paddingTop: 10 }}>
         <motion.div layout>
           {list.map((item, index) => {
             const isSelected =
               item.id === selectedId;
 
+            const largeShift =
+              mode === "weighted" &&
+              Math.abs(item.rankJump) >= 10;
+
             return (
               <motion.div
                 key={item.id}
                 layout
-                initial={{
-                  opacity: 0.9,
-                  scale: 0.995,
-                }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                }}
                 transition={{
                   layout: {
-                    duration: 0.75,
-                    ease: [0.16, 1, 0.3, 1],
+                    duration: 0.9,
+                    ease: [0.22, 1, 0.36, 1],
                   },
-                  opacity: { duration: 0.35 },
+                  opacity: { duration: 0.4 },
                 }}
                 ref={(el) =>
                   (itemRefs.current[item.id] = el)
@@ -230,40 +222,21 @@ export default function BarRankChart({
                   borderRadius: 10,
                   background: isSelected
                     ? "rgba(30,64,175,0.08)"
+                    : largeShift
+                    ? "rgba(220,38,38,0.05)"
                     : "transparent",
                   border: isSelected
                     ? "1px solid rgba(30,64,175,0.25)"
                     : "1px solid transparent",
-                  boxShadow: isSelected
-                    ? "0 6px 18px rgba(30,64,175,0.12)"
-                    : "none",
-                  transform: isSelected
-                    ? "scale(1.01)"
-                    : "scale(1)",
                   transition: "all 0.35s ease",
                 }}
               >
-                {isSelected && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 6,
-                      bottom: 6,
-                      width: 4,
-                      borderRadius: 4,
-                      background: "#1e40af",
-                    }}
-                  />
-                )}
-
                 <div
                   style={{
                     display: "flex",
                     justifyContent:
                       "space-between",
                     marginBottom: 6,
-                    gap: 10,
                   }}
                 >
                   <span
@@ -275,10 +248,6 @@ export default function BarRankChart({
                       color: isSelected
                         ? "#1e40af"
                         : "#334155",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      maxWidth: 220,
                       display: "flex",
                       alignItems: "center",
                     }}
@@ -303,8 +272,6 @@ export default function BarRankChart({
                       color: item.isHigh
                         ? "#ef4444"
                         : "#64748b",
-                      textAlign: "right",
-                      whiteSpace: "nowrap",
                     }}
                   >
                     {mode === "weighted" &&
@@ -319,7 +286,6 @@ export default function BarRankChart({
                     height: 5,
                     background: "#f1f5f9",
                     borderRadius: 3,
-                    overflow: "hidden",
                   }}
                 >
                   <div
@@ -333,7 +299,7 @@ export default function BarRankChart({
                         ? "#ef4444"
                         : "#94a3b8",
                       transition:
-                        "width 0.6s cubic-bezier(0.16,1,0.3,1), background 0.3s ease",
+                        "width 0.7s cubic-bezier(0.22,1,0.36,1)",
                     }}
                   />
                 </div>
@@ -341,54 +307,6 @@ export default function BarRankChart({
             );
           })}
         </motion.div>
-      </div>
-
-      <div
-        style={{
-          marginTop: 14,
-          padding: 14,
-          borderTop: "1px solid #eee",
-          background: "#fdfdfd",
-          borderRadius: 8,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 10,
-            fontWeight: 900,
-            color: "#64748b",
-            marginBottom: 6,
-            textTransform: "uppercase",
-          }}
-        >
-          Methodology & Data
-        </div>
-
-        {mode === "weighted" ? (
-          <p
-            style={{
-              fontSize: 10.5,
-              color: "#94a3b8",
-              lineHeight: 1.5,
-              margin: 0,
-            }}
-          >
-            Total Exposure ranks boroughs by NO₂ × population.
-            Exposure Index uses Avg = 100%.
-            Map color encodes burden ratio (burden share ÷ population share).
-          </p>
-        ) : (
-          <p
-            style={{
-              fontSize: 10.5,
-              color: "#94a3b8",
-              lineHeight: 1.5,
-              margin: 0,
-            }}
-          >
-            Raw NO₂ ranks boroughs by borough-average concentration (µg/m³).
-          </p>
-        )}
       </div>
     </div>
   );
