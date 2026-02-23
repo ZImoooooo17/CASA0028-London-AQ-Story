@@ -2,9 +2,9 @@ import React from "react";
 
 export default function ModeToggle({ mode, onMode }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      
-      {/* Toggle Buttons */}
+    <div style={container}>
+      <div style={heading}>CHOOSE VIEW</div>
+
       <div style={wrap}>
         <button
           onClick={() => onMode("raw")}
@@ -13,7 +13,7 @@ export default function ModeToggle({ mode, onMode }) {
             ...(mode === "raw" ? activeBlue : null),
           }}
         >
-          Average View
+          Average
         </button>
 
         <button
@@ -23,57 +23,72 @@ export default function ModeToggle({ mode, onMode }) {
             ...(mode === "weighted" ? activeRed : null),
           }}
         >
-          Burden View
+          Burden
         </button>
       </div>
 
-      {/* Semantic Description */}
       <div style={desc}>
         {mode === "raw"
-          ? "Boroughs ranked by mean NO₂ concentration."
-          : "Boroughs re-ranked by population-weighted exposure burden."}
+          ? "Ranked by mean NO₂."
+          : "Ranked by population exposure."}
       </div>
     </div>
   );
 }
 
-/* ---------------- Styles ---------------- */
+/* ===== STYLES ===== */
+
+const container = {
+  background: "rgba(15,23,42,0.95)",
+  padding: "8px 10px",
+  borderRadius: 12,
+  boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
+  display: "flex",
+  flexDirection: "column",
+  gap: 6,
+  width: "100%",
+  maxWidth: 220,
+};
+
+const heading = {
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: 0.5,
+  textTransform: "uppercase",
+  color: "#cbd5e1",
+};
 
 const wrap = {
   display: "flex",
   border: "1px solid rgba(255,255,255,0.14)",
-  borderRadius: 12,
+  borderRadius: 8,
   overflow: "hidden",
-  height: 44,
+  height: 34,
 };
 
 const btn = {
   flex: 1,
-  appearance: "none",
   border: "none",
-  background: "rgba(255,255,255,0.04)",
+  background: "rgba(255,255,255,0.05)",
   color: "#94a3b8",
-  padding: "10px 14px",
+  fontSize: 12,
+  fontWeight: 700,
   cursor: "pointer",
-  fontWeight: 800,
-  fontSize: 13,
-  transition: "all 0.3s ease",
+  transition: "all 0.2s ease",
 };
 
 const activeBlue = {
-  background: "rgba(59,130,246,0.22)",
+  background: "rgba(59,130,246,0.25)",
   color: "#1e40af",
 };
 
 const activeRed = {
-  background: "rgba(229,62,62,0.18)",
+  background: "rgba(239,68,68,0.25)",
   color: "#991b1b",
 };
 
 const desc = {
-  fontSize: 11,
+  fontSize: 10,
   color: "#94a3b8",
-  lineHeight: 1.4,
-  maxWidth: 260,
-  transition: "opacity 0.3s ease",
+  lineHeight: 1.3,
 };

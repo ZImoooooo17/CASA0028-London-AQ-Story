@@ -11,6 +11,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@turf/turf": "^7.3.4",
     "chart.js": "^4.5.1",
     "framer-motion": "^12.34.3",
     "maplibre-gl": "^5.18.0",
