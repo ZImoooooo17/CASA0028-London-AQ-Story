@@ -178,45 +178,60 @@ export default function DetailPanel({ selectedFeature, mode, onClose }) {
             border: "1px solid #e2e8f0",
           }}
         >
-          {/* Rank Shift */}
-          <div
-            key={mode}
-            style={{
-              fontSize: 72,
-              fontWeight: 950,
-              lineHeight: 1,
-              color:
-                jump > 0
-                  ? "#dc2626"
-                  : jump < 0
-                  ? "#1e40af"
-                  : "#475569",
-              animation: "rankPulse 0.6s ease-out",
-            }}
-          >
-            {jump > 0 ? `+${absJ}` : jump < 0 ? `-${absJ}` : "0"}
-          </div>
+         {/* Rank Shift */}
+<div
+  key={mode}
+  style={{
+    fontSize: 72,
+    fontWeight: 950,
+    lineHeight: 1,
+    color:
+      jump > 0
+        ? "#dc2626"
+        : jump < 0
+        ? "#1e40af"
+        : "#475569",
+    animation: "rankPulse 0.6s ease-out",
+  }}
+>
+  {jump > 0 ? `+${Math.abs(jump)}` : jump < 0 ? `-${Math.abs(jump)}` : "0"}
+</div>
 
-          <div
-            style={{
-              marginTop: 8,
-              fontSize: 12,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              color: "#64748b",
-              fontWeight: 800,
-            }}
-          >
-            Positions Reordered
-          </div>
+<div
+  style={{
+    marginTop: 8,
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: "0.14em",
+    color: "#64748b",
+    fontWeight: 800,
+  }}
+>
+  Positions Reordered
+</div>
 
-          {/* Rank Comparison */}
-          <div style={{ marginTop: 18, fontSize: 14 }}>
-            Raw Rank: <strong>{rawRank ?? "–"}</strong>
-            <br />
-            Weighted Rank: <strong>{weightedRank ?? "–"}</strong>
-          </div>
+{/* Rank Comparison */}
+<div style={{ marginTop: 18, fontSize: 14 }}>
+  Raw Rank: <strong>{rawRank ?? "—"}</strong>
+  <br />
+  Weighted Rank: <strong>{weightedRank ?? "—"}</strong>
+</div>
 
+{/* Rank Jump Method Note */}
+<div
+  style={{
+    marginTop: 14,
+    fontSize: 12,
+    color: "#64748b",
+    lineHeight: 1.5,
+  }}
+>
+  <strong>Rank Jump = Burden Rank − Concentration Rank</strong>
+  <br />
+  A positive value indicates that the borough carries a relatively
+  higher population-weighted burden than its average concentration
+  alone would suggest.
+</div>
           {/* Interpretation */}
           <div
             style={{
