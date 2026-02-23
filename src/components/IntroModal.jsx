@@ -1,4 +1,8 @@
-export default function IntroModal({ onStart, onSelectCase, data }) {
+export default function IntroModal({
+  onStart,
+  onSelectCase,
+  data,
+}) {
   return (
     <div
       style={{
@@ -21,90 +25,66 @@ export default function IntroModal({ onStart, onSelectCase, data }) {
           overflow: "hidden",
         }}
       >
-        {/* Header */}
         <div
           style={{
-            padding: 22,
-            borderBottom: "1px solid #e2e8f0",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            padding: 28,
+            lineHeight: 1.7,
           }}
         >
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                background: "#0f172a",
-                borderRadius: 12,
-              }}
-            />
-            <div>
-              <div style={{ fontWeight: 950, fontSize: 18 }}>
-                Average Air, Uneven Burdens
-              </div>
-              <div style={{ fontSize: 14, color: "#475569" }}>
-                London’s air quality is routinely reported as an average —
-                but every average hides as much as it reveals.
-              </div>
-            </div>
-          </div>
+          <h2 style={{ fontWeight: 900 }}>
+            Average Air, Uneven Burdens
+          </h2>
 
-          <button
-            onClick={onStart}
-            style={{
-              padding: "10px 16px",
-              borderRadius: 14,
-              border: "1px solid #cbd5e1",
-              background: "#f8fafc",
-              fontWeight: 800,
-              cursor: "pointer",
-            }}
-          >
-            Start Exploring →
-          </button>
-        </div>
-
-        {/* Body */}
-        <div style={{ padding: 28, lineHeight: 1.7 }}>
-          <p style={{ fontSize: 16 }}>
-            This interface offers <strong>two ways of seeing</strong> the same data:
+          <p style={{ fontSize: 16, marginTop: 12 }}>
+            London’s air quality is usually summarised as a single
+            number. But when we change the way we measure exposure,
+            the city rearranges itself.
           </p>
 
-          <ul style={{ marginTop: 10, fontSize: 15 }}>
+          <p style={{ marginTop: 16 }}>
+            This story begins with a simple question:
+            <strong> What changes when we change the metric?</strong>
+          </p>
+
+          <ul
+            style={{
+              marginTop: 14,
+              fontSize: 15,
+              lineHeight: 1.7,
+            }}
+          >
             <li>
-              <strong>Average View:</strong> borough mean NO₂ concentration.
+              <strong>Average View:</strong> ranks boroughs
+              by mean NO₂ concentration.
             </li>
             <li>
-              <strong>Burden View:</strong> population-weighted exposure
-              (and its inequality signals).
+              <strong>Burden View:</strong> ranks boroughs
+              by total exposure (NO₂ × population).
             </li>
           </ul>
 
-          <p style={{ marginTop: 18, fontSize: 15 }}>
-            Switch between them and notice what changes — and what quietly
-            fades from sight.
+          <p style={{ marginTop: 20 }}>
+            Switch between them and watch boroughs rise and
+            fall. The map stays the same — but the ranking
+            does not.
           </p>
 
           <p
             style={{
-              marginTop: 12,
-              fontSize: 16,
-              fontWeight: 700,
+              marginTop: 16,
+              fontSize: 17,
+              fontWeight: 800,
             }}
           >
-            Changing the viewing mode does not just change colour —
-            it reshapes the city.
+            Changing the metric does not just change colour.
+            It changes who appears most at risk.
           </p>
 
-          <div style={{ marginTop: 28, display: "flex", gap: 16 }}>
+          <div style={{ marginTop: 28 }}>
             <button
-              onClick={() =>
-                onSelectCase(data?.meta?.maxUpJumpId || "E09000005")
-              }
+              onClick={onStart}
               style={{
-                padding: "12px 18px",
+                padding: "12px 20px",
                 borderRadius: 16,
                 background: "#0f172a",
                 color: "white",
@@ -113,33 +93,8 @@ export default function IntroModal({ onStart, onSelectCase, data }) {
                 border: "none",
               }}
             >
-              Spotlight: Biggest rank jump (Brent) →
+              Start Exploring →
             </button>
-
-            <button
-              onClick={onStart}
-              style={{
-                padding: "12px 18px",
-                borderRadius: 16,
-                border: "1px solid #cbd5e1",
-                background: "#f1f5f9",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              Explore freely
-            </button>
-          </div>
-
-          <div
-            style={{
-              marginTop: 26,
-              fontSize: 13,
-              color: "#64748b",
-            }}
-          >
-            Tip: Hover the chart to locate boroughs on the map.
-            Click to open the narrative panel.
           </div>
         </div>
       </div>

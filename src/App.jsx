@@ -1,4 +1,5 @@
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import IntroModal from "./components/IntroModal";
 import MapView from "./components/MapView";
 import BarRankChart from "./components/BarRankChart";
@@ -12,66 +13,188 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
   const [showIntro, setShowIntro] = useState(true);
+  const [showRankingCue, setShowRankingCue] = useState(false);
 
   const { data, error } = useLondonData();
   const mapRef = useRef(null);
 
+  // 🎬 Dramatic cue when switching to Burden view
+  useEffect(() => {
+    if (mode === "weighted") {
+      setShowRankingCue(true);
+      const t = setTimeout(() => setShowRankingCue(false), 800);
+      return () => clearTimeout(t);
+    }
+  }, [mode]);
+
   const findFeatureById = (id) => {
     if (!id || !data?.features?.length) return null;
     const sid = String(id);
-    return data.features.find((f) => String(f?.id) === sid || String(f?.properties?.LAD22CD) === sid);
+    return data.features.find(
+      (f) =>
+        String(f?.id) === sid ||
+        String(f?.properties?.LAD22CD) === sid
+    );
   };
 
-  const selectedFeature = selectedId ? findFeatureById(selectedId) : null;
-  const isLoading = !data;
+  const selectedFeature = selectedId
+    ? findFeatureById(selectedId)
+    : null;
 
-  const rankExtremes = useMemo(() => {
-    if (!data?.features?.length) return null;
-    const features = data.features.map((f) => ({ id: f.properties.LAD22CD, name: f.properties.LAD22NM, jump: f.properties.rankJump }));
-    const upward = [...features].filter((f) => f.jump > 0).sort((a, b) => b.jump - a.jump)[0];
-    const downward = [...features].filter((f) => f.jump < 0).sort((a, b) => a.jump - b.jump)[0];
-    return { upward, downward };
-  }, [data]);
+  const isLoading = !data;
 
   if (error) return <div style={{ padding: 24 }}>Load Error.</div>;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       {showIntro && (
-        <IntroModal data={data} onStart={() => setShowIntro(false)} onSelectCase={(id) => { setMode("weighted"); setShowIntro(false); setTimeout(() => setSelectedId(id), 500); }} />
+        <IntroModal
+          data={data}
+          onStart={() => setShowIntro(false)}
+          onSelectCase={(id) => {
+            setMode("weighted");
+            setShowIntro(false);
+            setTimeout(() => setSelectedId(id), 500);
+          }}
+        />
       )}
 
-      {/* HEADER：增加相对定位和 zIndex */}
-      <header style={{ height: 70, background: "#fff", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", padding: "0 28px", position: "relative", zIndex: 50 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 900 }}>Average Air, Uneven Burdens</h1>
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>Changing the metric reshapes the geography of concern.</div>
+      {/* Header */}
+      <header
+        style={{
+          background: "#fff",
+          borderBottom: "1px solid #e2e8f0",
+          padding: "18px 28px",
+        }}
+      >
+        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900 }}>
+          Average Air, Uneven Burdens
+        </h1>
+
+        <div
+          style={{
+            fontSize: 14,
+            color: "#64748b",
+            marginTop: 8,
+            maxWidth: 760,
+            lineHeight: 1.6,
+          }}
+        >
+          Air pollution in London is often reduced to an average.
+          But averages can flatten difference. When exposure is
+          weighted by population, boroughs shift position —
+          and the geography of concern changes.
         </div>
       </header>
 
-      {/* MAIN INTERACTIVE ZONE */}
-      <section style={{ position: "relative", zIndex: 10 }}>
-        <div style={{ display: "flex", height: "75vh", position: "relative" }}>
-          
-          {/* LEFT RANK：通过不透明背景和 zIndex 解决阅读问题 */}
-          <aside style={{ flex: "0 0 360px", background: "rgba(255,255,255,0.98)", borderRight: "1px solid #e2e8f0", overflowY: "auto", position: "relative", zIndex: 20 }}>
-            {!isLoading && <BarRankChart data={data} mode={mode} selectedId={selectedId} onSelect={setSelectedId} onHover={setHoveredId} />}
+      {/* Main Interactive */}
+      <section style={{ position: "relative" }}>
+        <div style={{ display: "flex", height: "75vh" }}>
+          <aside
+            style={{
+              flex: "0 0 360px",
+              background: "rgba(255,255,255,0.98)",
+              borderRight: "1px solid #e2e8f0",
+              overflowY: "auto",
+            }}
+          >
+            {!isLoading && (
+              <BarRankChart
+                data={data}
+                mode={mode}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                onHover={setHoveredId}
+              />
+            )}
           </aside>
 
-          {/* MAP AREA */}
           <main style={{ flex: 1, position: "relative" }}>
             {!isLoading && (
               <>
-                <MapView data={data} mode={mode} mapRef={mapRef} selectedId={selectedId} onSelectedId={setSelectedId} hoveredId={hoveredId} onHoveredId={setHoveredId} />
-                <div style={{ position: "absolute", top: 16, left: 16, zIndex: 40, width: 220 }}>
-                  <ModeToggle mode={mode} onMode={(next) => { setSelectedId(null); setMode(next); }} />
+                <MapView
+                  data={data}
+                  mode={mode}
+                  mapRef={mapRef}
+                  selectedId={selectedId}
+                  onSelectedId={setSelectedId}
+                  hoveredId={hoveredId}
+                  onHoveredId={setHoveredId}
+                />
+
+                {/* Dramatic ranking cue */}
+                <AnimatePresence>
+                  {showRankingCue && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.96 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                      style={{
+                        position: "absolute",
+                        top: "40%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        background: "rgba(15,23,42,0.92)",
+                        color: "white",
+                        padding: "18px 28px",
+                        borderRadius: 20,
+                        fontWeight: 800,
+                        fontSize: 16,
+                        textAlign: "center",
+                        zIndex: 100,
+                        pointerEvents: "none",
+                        boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+                      }}
+                    >
+                      <div>The ranking has changed.</div>
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontWeight: 600,
+                          fontSize: 14,
+                          opacity: 0.85,
+                        }}
+                      >
+                        Who rises now?
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div style={{ position: "absolute", top: 16, left: 16 }}>
+                  <ModeToggle
+                    mode={mode}
+                    onMode={(next) => {
+                      setSelectedId(null);
+                      setMode(next);
+                    }}
+                  />
                 </div>
-                <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 40 }}>
-                  <Legend mode={mode} defaultOpen={true} />
+
+                <div style={{ position: "fixed", bottom: 24, right: 24 }}>
+                  <Legend mode={mode} />
                 </div>
+
                 {selectedId && selectedFeature && (
-                  <div style={{ position: "absolute", top: 0, right: 0, width: 400, height: "100%", background: "#fff", borderLeft: "1px solid #e2e8f0", zIndex: 30, overflowY: "auto", boxShadow: "-10px 0 20px rgba(0,0,0,0.05)" }}>
-                    <DetailPanel selectedFeature={selectedFeature} mode={mode} onClose={() => setSelectedId(null)} />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      right: 0,
+                      width: 400,
+                      height: "100%",
+                      background: "#fff",
+                      borderLeft: "1px solid #e2e8f0",
+                      overflowY: "auto",
+                      boxShadow: "-10px 0 20px rgba(0,0,0,0.05)",
+                    }}
+                  >
+                    <DetailPanel
+                      selectedFeature={selectedFeature}
+                      mode={mode}
+                      onClose={() => setSelectedId(null)}
+                    />
                   </div>
                 )}
               </>
@@ -80,36 +203,140 @@ export default function App() {
         </div>
       </section>
 
-      {/* RANK SHIFT & FOOTER：恢复流式布局，确保不被地图覆盖 */}
-      {rankExtremes && (
-        <section style={{ background: "#fff", borderTop: "1px solid #e2e8f0", padding: "50px 28px", position: "relative", zIndex: 10 }}>
-          <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-            <h2 style={{ fontWeight: 900 }}>When population is considered, London is reordered</h2>
-            <div style={{ display: "flex", gap: 80, marginTop: 30 }}>
-              {rankExtremes.upward && (
-                <div>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>Largest upward shift</div>
-                  <div onClick={() => { setMode("weighted"); setSelectedId(rankExtremes.upward.id); }} style={{ fontWeight: 900, cursor: "pointer" }}>{rankExtremes.upward.name}</div>
-                  <div>+{rankExtremes.upward.jump} places</div>
-                </div>
-              )}
-              {rankExtremes.downward && (
-                <div>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>Largest downward shift</div>
-                  <div onClick={() => { setMode("weighted"); setSelectedId(rankExtremes.downward.id); }} style={{ fontWeight: 900, cursor: "pointer" }}>{rankExtremes.downward.name}</div>
-                  <div>{rankExtremes.downward.jump} places</div>
-                </div>
-              )}
-            </div>
-            <p style={{ marginTop: 25, color: "#475569" }}>Dense boroughs rise in concern even when raw concentration is not highest.</p>
-          </div>
-        </section>
-      )}
+      {/* Conditional Punchline Section */}
+      <AnimatePresence>
+  {mode === "weighted" && (
+    <motion.section
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      style={{
+        background: "#ffffff",
+        borderTop: "1px solid #e2e8f0",
+        padding: "80px 28px",
+        textAlign: "center",
+      }}
+    >
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        
+        {/* Headline */}
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 900,
+            marginBottom: 40,
+          }}
+        >
+          When population is considered,
+          London is reordered.
+        </div>
 
-      <footer style={{ padding: "40px 28px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", position: "relative", zIndex: 10 }}>
+        {/* Punchline */}
+        <div
+          style={{
+            fontSize: 20,
+            fontWeight: 800,
+            lineHeight: 1.6,
+            marginBottom: 60,
+          }}
+        >
+          The ranking has changed.
+          <br />
+          So has the map of concern.
+        </div>
+
+        {/* Evidence Block */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 80,
+            flexWrap: "wrap",
+            marginBottom: 40,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                textTransform: "uppercase",
+                color: "#64748b",
+                marginBottom: 6,
+                fontWeight: 700,
+              }}
+            >
+              Largest upward shift
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 900 }}>
+              Croydon
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 700 }}>
+              +17 places
+            </div>
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                textTransform: "uppercase",
+                color: "#64748b",
+                marginBottom: 6,
+                fontWeight: 700,
+              }}
+            >
+              Largest downward shift
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 900 }}>
+              City of London
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 700 }}>
+              –32 places
+            </div>
+          </div>
+        </div>
+
+        {/* Closing Summary */}
+        <div
+          style={{
+            fontSize: 15,
+            color: "#475569",
+            maxWidth: 600,
+            margin: "0 auto",
+            lineHeight: 1.6,
+          }}
+        >
+          Dense boroughs rise in concern
+          even when raw concentration is not highest.
+        </div>
+
+      </div>
+    </motion.section>
+  )}
+</AnimatePresence>
+
+      {/* Footer */}
+      <footer
+        style={{
+          padding: "40px 28px",
+          background: "#f8fafc",
+          borderTop: "1px solid #e2e8f0",
+        }}
+      >
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <strong>What does this interface show?</strong>
-          <p style={{ marginTop: 12 }}>By changing the metric, we change which boroughs appear most concerning. Measurement is not neutral. It shapes spatial visibility and political priority.</p>
+          <strong>What does this experiment reveal?</strong>
+          <p
+            style={{
+              marginTop: 12,
+              lineHeight: 1.7,
+              color: "#475569",
+            }}
+          >
+            When we change the metric, we change which boroughs demand
+            attention. Measurement is not neutral — it shapes what
+            becomes visible, and therefore what becomes urgent.
+          </p>
         </div>
       </footer>
     </div>

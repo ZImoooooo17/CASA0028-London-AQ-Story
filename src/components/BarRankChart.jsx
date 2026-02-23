@@ -1,5 +1,4 @@
-import React, { useMemo, useEffect, useRef } from "react";
-// ① 顶部引入：加入 motion
+import React, { useMemo, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 function num(x, fallback = 0) {
@@ -13,18 +12,50 @@ function fmtPct01(x, digits = 1) {
   return `${(n * 100).toFixed(digits)}%`;
 }
 
-export default function BarRankChart({ data, mode, selectedId, onSelect, onHover }) {
+export default function BarRankChart({
+  data,
+  mode,
+  selectedId,
+  onSelect,
+  onHover,
+}) {
   const itemRefs = useRef({});
+  const [delayedMode, setDelayedMode] = useState(mode);
+  const [showNote, setShowNote] = useState(false);
+
+  // 🎬 延迟排序节奏（地图先变）
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDelayedMode(mode);
+    }, 120);
+    return () => clearTimeout(t);
+  }, [mode]);
+
+  // 🎬 排序提示文字（短暂淡出）
+  useEffect(() => {
+    if (mode === "weighted") {
+      setShowNote(true);
+      const t = setTimeout(() => setShowNote(false), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [mode]);
 
   const list = useMemo(() => {
     if (!data?.features?.length) return [];
 
-    // 🎯 优化 1：动态计算最大值，确保 barWidth 比例真实
-    if (mode === "weighted") {
-      const maxExp = Math.max(...data.features.map(f => num(f.properties?.exposureIndex)));
-      
+    if (delayedMode === "weighted") {
+      const maxExp = Math.max(
+        ...data.features.map((f) =>
+          num(f.properties?.exposureIndex)
+        )
+      );
+
       return [...data.features]
-        .sort((a, b) => num(b.properties?.totalExposure) - num(a.properties?.totalExposure))
+        .sort(
+          (a, b) =>
+            num(b.properties?.totalExposure) -
+            num(a.properties?.totalExposure)
+        )
         .map((f) => {
           const idx = num(f.properties?.exposureIndex);
           const bShare = f.properties?.burdenShare;
@@ -34,18 +65,27 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
             id: f.id,
             name: f.properties?.LAD22NM || "Borough",
             displayPrimary: `${idx.toFixed(0)}%`,
-            displaySecondary: shareText ? `${shareText} share` : null,
-            // 使用相对比例计算
+            displaySecondary: shareText
+              ? `${shareText} share`
+              : null,
             barWidthPct: `${(idx / maxExp) * 100}%`,
             isHigh: idx >= 120,
           };
         });
     }
 
-    const maxNO2 = Math.max(...data.features.map(f => num(f.properties?.NO2)));
+    const maxNO2 = Math.max(
+      ...data.features.map((f) =>
+        num(f.properties?.NO2)
+      )
+    );
 
     return [...data.features]
-      .sort((a, b) => num(b.properties?.NO2) - num(a.properties?.NO2))
+      .sort(
+        (a, b) =>
+          num(b.properties?.NO2) -
+          num(a.properties?.NO2)
+      )
       .map((f) => {
         const v = num(f.properties?.NO2);
         return {
@@ -53,27 +93,40 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
           name: f.properties?.LAD22NM || "Borough",
           displayPrimary: `${v.toFixed(1)} µg/m³`,
           displaySecondary: null,
-          // 使用相对比例计算
           barWidthPct: `${(v / maxNO2) * 100}%`,
           isHigh: v >= 30,
         };
       });
-  }, [data, mode]);
+  }, [data, delayedMode]);
 
   useEffect(() => {
     if (selectedId && itemRefs.current[selectedId]) {
-      itemRefs.current[selectedId].scrollIntoView({ behavior: "smooth", block: "nearest" });
+      itemRefs.current[selectedId].scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
     }
   }, [selectedId]);
 
-  const title = mode === "raw" ? "Ranking by NO₂ Concentration" : "Ranking by Total Exposure";
+  const title =
+    mode === "raw"
+      ? "Ranking by NO₂ Concentration"
+      : "Ranking by Total Exposure";
+
   const subtitle =
     mode === "raw"
       ? "Borough mean concentration (µg/m³)."
       : "Population burden ordering: NO₂ × population (Exposure Index shown; Avg = 100%).";
 
   return (
-    <div style={{ padding: 15, height: "100%", display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        padding: 15,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <div
         style={{
           position: "sticky",
@@ -96,47 +149,100 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
         >
           {title}
         </h3>
-        <div style={{ marginTop: 6, fontSize: 11.5, color: "#94a3b8", lineHeight: 1.35 }}>
+
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 11.5,
+            color: "#94a3b8",
+            lineHeight: 1.35,
+          }}
+        >
           {subtitle}
         </div>
+
+        {/* 🎬 排序确认提示 */}
+        {showNote && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              fontSize: 10,
+              marginTop: 6,
+              color: "#64748b",
+            }}
+          >
+            Ranking reordered under population weighting.
+          </motion.div>
+        )}
       </div>
 
-      <div style={{ flex: 1, position: "relative", paddingTop: 10 }}>
-        {/* ② 列表外层 layout 容器 */}
-        <motion.div layout style={{ position: "relative", zIndex: 1 }}>
+      <div
+        style={{
+          flex: 1,
+          position: "relative",
+          paddingTop: 10,
+        }}
+      >
+        <motion.div layout>
           {list.map((item, index) => {
-            const isSelected = item.id === selectedId;
+            const isSelected =
+              item.id === selectedId;
 
             return (
-              /* ③ motion.div 强化：引入 layout、呼吸感渐变和排名数字 */
               <motion.div
                 key={item.id}
                 layout
-                // 🎯 优化 2：给重排加轻微 fade 呼吸感
-                initial={{ opacity: 0.9 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  layout: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-                  opacity: { duration: 0.4 }
+                initial={{
+                  opacity: 0.9,
+                  scale: 0.995,
                 }}
-                ref={(el) => (itemRefs.current[item.id] = el)}
-                onClick={() => onSelect?.(item.id)}
-                onMouseEnter={() => onHover?.(item.id)}
-                onMouseLeave={() => onHover?.(null)}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                }}
+                transition={{
+                  layout: {
+                    duration: 0.75,
+                    ease: [0.16, 1, 0.3, 1],
+                  },
+                  opacity: { duration: 0.35 },
+                }}
+                ref={(el) =>
+                  (itemRefs.current[item.id] = el)
+                }
+                onClick={() =>
+                  onSelect?.(item.id)
+                }
+                onMouseEnter={() =>
+                  onHover?.(item.id)
+                }
+                onMouseLeave={() =>
+                  onHover?.(null)
+                }
                 style={{
                   position: "relative",
                   padding: "10px 12px",
                   marginBottom: 6,
                   cursor: "pointer",
                   borderRadius: 10,
-                  background: isSelected ? "rgba(30,64,175,0.08)" : "transparent",
-                  border: isSelected ? "1px solid rgba(30,64,175,0.25)" : "1px solid transparent",
-                  boxShadow: isSelected ? "0 6px 18px rgba(30,64,175,0.12)" : "none",
-                  transform: isSelected ? "scale(1.01)" : "scale(1)",
+                  background: isSelected
+                    ? "rgba(30,64,175,0.08)"
+                    : "transparent",
+                  border: isSelected
+                    ? "1px solid rgba(30,64,175,0.25)"
+                    : "1px solid transparent",
+                  boxShadow: isSelected
+                    ? "0 6px 18px rgba(30,64,175,0.12)"
+                    : "none",
+                  transform: isSelected
+                    ? "scale(1.01)"
+                    : "scale(1)",
                   transition: "all 0.35s ease",
                 }}
               >
-                {/* 左侧 accent 条 */}
                 {isSelected && (
                   <div
                     style={{
@@ -151,28 +257,40 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
                   />
                 )}
 
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, gap: 10 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent:
+                      "space-between",
+                    marginBottom: 6,
+                    gap: 10,
+                  }}
+                >
                   <span
                     style={{
                       fontSize: 13,
-                      fontWeight: isSelected ? 800 : 500,
-                      color: isSelected ? "#1e40af" : "#334155",
+                      fontWeight: isSelected
+                        ? 800
+                        : 500,
+                      color: isSelected
+                        ? "#1e40af"
+                        : "#334155",
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       maxWidth: 220,
-                      transition: "color 0.3s ease",
                       display: "flex",
-                      alignItems: "center"
+                      alignItems: "center",
                     }}
                   >
-                    {/* 🎯 强化：加入 rank number */}
-                    <span style={{
-                      fontSize: 11,
-                      fontWeight: 800,
-                      color: "#94a3b8",
-                      marginRight: 6
-                    }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: "#94a3b8",
+                        marginRight: 6,
+                      }}
+                    >
                       #{index + 1}
                     </span>
                     {item.name}
@@ -182,12 +300,15 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
                     style={{
                       fontSize: 12,
                       fontWeight: 900,
-                      color: item.isHigh ? "#ef4444" : "#64748b",
+                      color: item.isHigh
+                        ? "#ef4444"
+                        : "#64748b",
                       textAlign: "right",
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {mode === "weighted" && item.displaySecondary
+                    {mode === "weighted" &&
+                    item.displaySecondary
                       ? `${item.displayPrimary} · ${item.displaySecondary}`
                       : item.displayPrimary}
                   </span>
@@ -204,13 +325,15 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
                   <div
                     style={{
                       height: "100%",
-                      width: item.barWidthPct,
+                      width:
+                        item.barWidthPct,
                       background: isSelected
                         ? "#1e40af"
                         : item.isHigh
                         ? "#ef4444"
                         : "#94a3b8",
-                      transition: "width 0.45s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease",
+                      transition:
+                        "width 0.6s cubic-bezier(0.16,1,0.3,1), background 0.3s ease",
                     }}
                   />
                 </div>
@@ -242,13 +365,27 @@ export default function BarRankChart({ data, mode, selectedId, onSelect, onHover
         </div>
 
         {mode === "weighted" ? (
-          <p style={{ fontSize: 10.5, color: "#94a3b8", lineHeight: 1.5, margin: 0 }}>
+          <p
+            style={{
+              fontSize: 10.5,
+              color: "#94a3b8",
+              lineHeight: 1.5,
+              margin: 0,
+            }}
+          >
             Total Exposure ranks boroughs by NO₂ × population.
             Exposure Index uses Avg = 100%.
             Map color encodes burden ratio (burden share ÷ population share).
           </p>
         ) : (
-          <p style={{ fontSize: 10.5, color: "#94a3b8", lineHeight: 1.5, margin: 0 }}>
+          <p
+            style={{
+              fontSize: 10.5,
+              color: "#94a3b8",
+              lineHeight: 1.5,
+              margin: 0,
+            }}
+          >
             Raw NO₂ ranks boroughs by borough-average concentration (µg/m³).
           </p>
         )}
