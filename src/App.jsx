@@ -18,16 +18,19 @@ export default function App() {
   const { data, error } = useLondonData();
   const mapRef = useRef(null);
 
+  /* =============================
+     Toast timing upgraded
+  ============================== */
   useEffect(() => {
     if (mode === "weighted") {
       setShowRankingCue(true);
-      const t = setTimeout(() => setShowRankingCue(false), 800);
+      const t = setTimeout(() => setShowRankingCue(false), 1800);
       return () => clearTimeout(t);
     }
   }, [mode]);
 
   /* =============================
-     强重排逻辑（基于 rankJump）
+     Shift statistics (stable)
   ============================== */
   const shiftStats = useMemo(() => {
     if (!data?.features?.length) return null;
@@ -75,7 +78,7 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      
+
       {showIntro && (
         <IntroModal
           data={data}
@@ -88,7 +91,9 @@ export default function App() {
         />
       )}
 
-      {/* Header */}
+      {/* =============================
+         Academic Header (CASA tone)
+      ============================== */}
       <header style={{
         background: "#fff",
         borderBottom: "1px solid #e2e8f0",
@@ -104,17 +109,18 @@ export default function App() {
           maxWidth: 760,
           lineHeight: 1.6,
         }}>
-          Air pollution in London is often reduced to an average.
-          But averages flatten difference. When exposure is
-          weighted by population, boroughs shift position —
-          and the geography of concern changes.
+          Air pollution in London is commonly reported as an average concentration.
+          This prototype explores how alternative measurement framings — specifically population-weighted exposure —
+          can reorganise the spatial ordering of boroughs.
         </div>
       </header>
 
-      {/* Interactive */}
+      {/* =============================
+         Interactive Section
+      ============================== */}
       <section style={{ position: "relative" }}>
         <div style={{ display: "flex", height: "75vh" }}>
-          
+
           <aside style={{
             flex: "0 0 360px",
             background: "#fff",
@@ -145,28 +151,35 @@ export default function App() {
                   onHoveredId={setHoveredId}
                 />
 
+                {/* =============================
+                   Upgraded Toast
+                ============================== */}
                 <AnimatePresence>
                   {showRankingCue && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      style={{
-                        position: "absolute",
-                        top: "42%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        background: "rgba(15,23,42,0.92)",
-                        color: "white",
-                        padding: "16px 24px",
-                        borderRadius: 18,
-                        fontWeight: 700,
-                        fontSize: 14,
-                        zIndex: 100,
-                      }}
-                    >
-                      The ranking has changed.
+                   <motion.div
+                   initial={{ opacity: 0, y: 18, scale: 0.95 }}
+                   animate={{ opacity: 1, y: 0, scale: 1 }}
+                   exit={{ opacity: 0, y: -24, scale: 0.96 }}
+                   transition={{ duration: 0.28 }}
+                   style={{
+                     position: "fixed",
+                     top: "50%",
+                     left: "50%",
+                     transform: "translate(-50%, -50%)",
+                     background: "rgba(10,15,30,0.98)",
+                     color: "#ffffff",
+                     padding: "22px 32px",
+                     borderRadius: 22,
+                     fontWeight: 700,
+                     fontSize: 16,
+                     zIndex: 9999,
+                     textAlign: "center",
+                     boxShadow: "0 24px 60px rgba(0,0,0,0.4)"
+                   }}
+                 >
+                      The map has been reordered.
+                      <br />
+                      Pollution is not evenly experienced.
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -206,7 +219,9 @@ export default function App() {
         </div>
       </section>
 
-      {/* 🔥 Research-style Summary Block */}
+      {/* =============================
+         Research Summary (cleaned)
+      ============================== */}
       {mode === "weighted" && shiftStats && (
         <section style={{
           background: "#ffffff",
@@ -221,15 +236,10 @@ export default function App() {
             gap: 60,
             alignItems: "center"
           }}>
-            
-            {/* Left – Narrative */}
+
             <div>
               <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 12 }}>
                 When population is considered, London is reordered.
-              </div>
-
-              <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 18 }}>
-                The ranking has changed. So has the map of concern.
               </div>
 
               <div style={{
@@ -237,11 +247,10 @@ export default function App() {
                 color: "#475569",
                 lineHeight: 1.6
               }}>
-                Dense boroughs rise in concern even when raw concentration is not highest.
+                Dense boroughs rise in relative concern even when raw concentration is not highest.
               </div>
             </div>
 
-            {/* Right – Metrics */}
             <div style={{
               background: "#f8fafc",
               borderRadius: 16,
@@ -282,23 +291,34 @@ export default function App() {
         </section>
       )}
 
+      {/* =============================
+         CASA Academic Footer
+      ============================== */}
       <footer style={{
         padding: "40px 28px",
         background: "#f8fafc",
         borderTop: "1px solid #e2e8f0",
       }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <strong>What does this experiment reveal?</strong>
-          <p style={{
-            marginTop: 12,
-            lineHeight: 1.7,
-            color: "#475569",
-          }}>
-            Measurement is not neutral — it shapes what becomes visible,
-            and therefore what becomes urgent.
-          </p>
+          <div style={{ fontWeight: 700, marginBottom: 12 }}>
+            Data and Methodological Notes
+          </div>
+
+          <div style={{ fontSize: 14, lineHeight: 1.7, color: "#475569" }}>
+            <strong>Data Sources.</strong> This prototype draws on borough-level annual mean NO₂ concentration data and publicly available borough-level population estimates.
+            <br /><br />
+            <strong>Methodological Approach.</strong> Population burden is calculated as each borough’s proportion of total recorded pollution divided by its proportion of total population.
+            Rankings are compared between raw concentration and population-weighted exposure to examine how spatial ordering shifts under different measurement regimes.
+            <br /><br />
+            <strong>Interpretative Scope.</strong> The comparison foregrounds the distinction between concentration and relative exposure, highlighting how aggregate metrics can reorganise spatial hierarchies.
+            <br /><br />
+            <strong>Limitations.</strong> The analysis operates at borough scale and therefore obscures intra-borough variability.
+            It does not incorporate socioeconomic, housing, or health outcome indicators.
+            The burden ratio is a comparative index rather than a causal measure of environmental risk.
+          </div>
         </div>
       </footer>
+
     </div>
   );
 }
